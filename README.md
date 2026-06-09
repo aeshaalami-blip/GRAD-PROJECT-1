@@ -2,1241 +2,1245 @@
 
 **TrendScope**
 
-_YouTube Trend Discovery & Business Intelligence Platform_
+YouTube Trend Discovery & Business Intelligence Platform
 
-_https://grad-project-aeshaalami.streamlit.app/_
-
-Submitted by:
-
-**Aesha Alami — Student ID: 202330074**
-
-Supervised by: Dr. Husam Barham
-
-Course: 307498 — Graduation Project
-
-Second Semester, 2026
-
-Submission Date: June 2026
+| **Submitted by:**  | **Aesha Alami**                           |
+|--------------------|-------------------------------------------|
+| **Student ID:**    | 202330074                                 |
+| **Supervised by:** | Dr. Husam Barham                          |
+| **Course:**        | 307498 --- Graduation Project             |
+| **Semester:**      | Second Semester, 2026                     |
+| **Live App:**      | grad-project-aeshaalami.streamlit.app     |
+| **GitHub:**        | github.com/aeshaalami-blip/GRAD-PROJECT-1 |
 
 # Abstract
 
-TrendScope is a Business Intelligence platform designed to transform YouTube into a real-time trend observatory. By entering a single keyword such as AI, Electric Vehicles, or Real Estate, business analysts, marketers, content strategists, and researchers gain immediate access to a structured intelligence layer that reveals what topics are rising, which channels dominate a space, how audience sentiment shifts over time, and what related keywords are emerging around any theme.
+TrendScope is a Business Intelligence platform built on top of the YouTube Data API v3. It transforms any YouTube keyword into a structured analytical report, covering video performance, competitive landscape, audience demographics, content strategy, and revenue intelligence --- all delivered in under 30 seconds through a live Streamlit web application.
 
-The platform was built using a complete end-to-end data pipeline. YouTube video metadata is collected through the official YouTube Data API v3, covering search results, video statistics, channel information, category labels, and comment samples. The raw data is transformed through a multi-stage Python processing pipeline that normalises fields, extracts temporal features, computes engagement scores, runs transformer-based sentiment classification on comment samples, and applies topic modelling to identify dominant themes across result sets. All processed datasets are structured into a relational schema and persisted as analysis-ready CSV files and a SQLite database.
+The platform was built to address a clear gap: there is no accessible, free tool that turns YouTube data into structured business intelligence at the keyword level. Raw view count is misleading, no timing intelligence exists for trend entry, and competitive mapping is entirely manual. TrendScope solves all four of these problems through a five-stage data pipeline: Collect, Clean, Enrich, Analyse, and Visualise.
 
-Results are surfaced through two complementary interfaces: a Streamlit web application for interactive, keyword-driven exploration, and a Microsoft Power BI dashboard for executive-level analytics and historical trend comparison. Key findings include the ability to detect trend velocity and saturation, identify early-rising channels before they peak, surface dominant audience concerns through comment sentiment, and map the semantic neighbourhood of any keyword through related topic clustering.
+The application is implemented in Python, HTML, and CSS. Python handles all logic, API interaction, and analytical computation. HTML and CSS, injected through Streamlit's markdown interface, provide the full visual layer --- including the navigation bar, card components, badges, tables, and colour system. Plotly provides all 16 interactive charts across the six-tab dashboard. A separate Power BI dashboard serves as the executive reporting interface.
 
-TrendScope demonstrates that publicly available YouTube data, when systematically collected and intelligently processed, constitutes a powerful and underutilised business intelligence asset applicable across industries including media, marketing, investment research, and competitive intelligence.
+Validation across five real keywords --- Artificial Intelligence, Electric Vehicles, Real Estate Jordan, World Cup 2026, and Healthy Eating --- confirmed that the engagement rate metric consistently outperforms raw view count for identifying genuinely trending content. Channel concentration was observed as a consistent pattern across all five keywords, and the velocity classification system provides meaningful timing intelligence for content strategy decisions.
 
 # Acknowledgment
 
-I would like to express sincere gratitude to Dr. Husam Barham for his clear and precise project direction, which challenged me to think beyond narrow technical implementation and focus on building genuine business intelligence value. His guidance in reframing the project around keyword-driven trend discovery transformed the direction of this work and sharpened its practical relevance.
+I would like to express my sincere gratitude to my supervisor, Dr. Husam Barham, for his guidance, feedback, and support throughout this project. His direction in shaping the business intelligence focus of TrendScope was invaluable.
 
-I also acknowledge the open-source community whose tools made this project technically feasible: the YouTube Data API v3 team at Google for providing structured programmatic access to YouTube's data; the Hugging Face team for the transformer-based sentiment models used in comment analysis; the Streamlit team for enabling rapid, polished web application development without frontend engineering overhead; and the Microsoft Power BI team for providing a world-class business intelligence visualisation environment.
+I also acknowledge the open-source tools and platforms that made this project possible: Google's YouTube Data API v3, the Streamlit framework, the Plotly visualisation library, and Microsoft Power BI. Finally, I thank everyone who provided feedback during the development and testing phases of this platform.
 
-Finally, I extend appreciation to my peers and family for their encouragement and patience throughout the intensive development and documentation process that this graduation project demanded.
+# Table of Contents
 
-# Business Intelligence Project Description and Objectives
+1\. Abstract \...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\... 2
 
-## Industry Context and Problem Domain
+2\. Acknowledgment \...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\... 2
 
-YouTube is the world's second-largest search engine and the dominant platform for video content consumption, with over 800 million videos and more than 500 hours of new content uploaded every minute. This makes YouTube one of the richest, most dynamic, and most underutilised business intelligence data sources available to analysts, marketers, and strategists.
+3\. Business Intelligence Project Description and Objectives \...\...\...\...\...\...\...\... 3
 
-Every search performed on YouTube, every video that gains traction, every spike in engagement, and every comment thread reflects real consumer interest in real time. When electric vehicle searches surge on YouTube three months before a competitor announces a new model launch, that signal has commercial value. When a niche cooking technique channel grows from 10,000 to 500,000 subscribers in six weeks, that is a trend intelligence asset for the food industry. When audience comments on technology videos shift from curiosity to scepticism over a twelve-month period, that sentiment evolution matters to investors and product teams.
+4\. Data Research and Acquiring Effort \...\...\...\...\...\...\...\...\...\...\...\...\...\...\.... 5
 
-The challenge is that this data is unstructured, voluminous, multilingual, and scattered across millions of individual videos and channels. No business analyst can monitor it manually. There is currently no accessible, general-purpose BI tool that allows a non-technical user to enter a keyword and receive a structured, visual, interactive intelligence briefing about that topic's presence, evolution, and audience reception on YouTube.
+5\. Links to Raw Data \...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\... 6
 
-TrendScope fills this gap.
+6\. Data Description and Understanding \...\...\...\...\...\...\...\...\...\...\...\...\...\...\.... 7
 
-## Why YouTube?
+7\. Data Primary Cleaning and Transformation \...\...\...\...\...\...\...\...\...\...\...\...\.... 12
 
-YouTube was selected as the data source for four strategic reasons. First, it operates as a search engine, meaning query-matched data collection is native and structured. Second, it provides rich metadata per video including view counts, like counts, comment counts, subscriber counts, publish dates, category labels, and duration, all of which are analytically meaningful. Third, the YouTube Data API v3 provides legal, rate-limited, and reproducible programmatic access to this data. Fourth, unlike Twitter/X or Reddit which attract specific demographic subsets, YouTube's audience is broad, global, and deeply engaged, making sentiment signals derived from its comments more representative.
+8\. Advanced Analytics and Intelligence Engines \...\...\...\...\...\...\...\...\...\...\...\.... 16
 
-## Project Purpose and Positioning
+9\. Data Visualisation and Insights \...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\.... 23
 
-TrendScope is a Business Intelligence graduation project. Its purpose is to answer real business questions with data, not to benchmark machine learning models. Every design decision, from data collection through to dashboard layout, was made with a business user in mind: someone who needs useful intelligence, not statistical output.
+10\. Tools Research and Selection Effort \...\...\...\...\...\...\...\...\...\...\...\...\...\...\... 35
 
-The primary user of TrendScope is a business analyst, content strategist, marketing manager, or product researcher who wants to understand what is trending on YouTube around a topic relevant to their domain. They should be able to open TrendScope, type a keyword, and within seconds receive a comprehensive intelligence briefing without any programming knowledge or data science background.
+11\. Project Deployment Effort --- Use Case \...\...\...\...\...\...\...\...\...\...\...\...\...\..... 38
 
-## Project Objectives
+12\. Results \...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\.... 40
 
-**The core objectives of TrendScope are structured across three analytical dimensions:**
+13\. Conclusion \...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\.... 44
 
-### Objective 1 – Trend Discovery
+14\. References \...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\...\.... 47
 
-- Retrieve real-time YouTube video data for any keyword entered by the user.
-- Rank videos by engagement score (a composite metric combining views, likes, comments, and recency).
-- Identify trending topics that cluster around the keyword using semantic grouping.
-- Detect the trend lifecycle stage of the keyword: emerging, peaking, declining, or stable.
+# 3. Business Intelligence Project Description and Objectives {#business-intelligence-project-description-and-objectives}
 
-### Objective 2 – Intelligence Extraction
+## 3.1 Project Overview {#project-overview}
 
-- Identify the dominant channels and creators who lead conversations around any keyword.
-- Extract audience sentiment from video comments using transformer-based NLP models.
-- Map related keywords and semantic neighbours that co-occur with the entered keyword.
-- Track how topic emphasis and audience interest evolves month-over-month.
+TrendScope is a keyword-driven Business Intelligence platform that collects, enriches, and analyses YouTube video data to produce structured intelligence reports. The platform was built to answer a question that no free tool currently answers well: given any topic or keyword, what is the actual state of that topic on YouTube --- who is winning, what the audience looks like, where the content gaps are, and what a creator or brand should do next?
 
-### Objective 3 – Business Intelligence Delivery
+The platform operates as a five-stage pipeline. Stage one collects raw video data from the YouTube Data API v3. Stage two cleans and standardises the data. Stage three enriches each video with derived metrics including engagement rate, velocity classification, estimated CPM, and estimated revenue. Stage four runs five analytical engines across the enriched dataset. Stage five delivers all outputs through two interfaces: a Streamlit web application for live interactive exploration, and a Power BI dashboard for executive reporting.
 
-- Present all findings through an interactive Streamlit application with real-time keyword input.
-- Deliver executive-level analytics through a Microsoft Power BI dashboard.
-- Enable non-technical users to generate insight independently without programming knowledge.
-- Structure data for repeatability, so any keyword can be re-queried and compared historically.
+## 3.2 Industry Context {#industry-context}
 
-# Data Research and Acquiring Effort
+YouTube is the second largest search engine in the world, with over 800 million videos and 500 hours of new content uploaded every minute. For content creators, brands, and marketers, understanding what is trending in a specific space is a critical competitive advantage. The food delivery industry in Jordan, the technology sector, sports marketing, and dozens of other domains all rely on YouTube as a primary channel for audience engagement.
 
-## Data Source Evaluation
+Despite this, no accessible tool provides keyword-level YouTube intelligence. Google Trends provides search volume for one signal only. Social Blade tracks individual channel growth, not topic-level analysis. Paid platforms like Tubular Labs cost thousands of dollars per month and are out of reach for creators and small businesses. TrendScope fills this gap with a free, keyword-focused, AI-assisted BI platform.
 
-The data acquisition phase began with a systematic evaluation of potential sources for YouTube-related trend intelligence. The evaluation considered five candidate source types:
+## 3.3 Core Business Problems Solved {#core-business-problems-solved}
+
+<table style="width:96%;">
+<colgroup>
+<col style="width: 96%" />
+</colgroup>
+<thead>
+<tr>
+<th><p><strong>Problem 1: Raw view count misleads.</strong></p>
+<p>A five-year-old viral video naturally has far more views than a video that went live last week and is actively trending. Sorting by views shows you what was popular, not what is popular right now. TrendScope‚Äôs engagement rate metric corrects for this by measuring active audience interaction ‚Äî likes and comments relative to views ‚Äî rather than raw accumulated reach.</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+<table style="width:96%;">
+<colgroup>
+<col style="width: 96%" />
+</colgroup>
+<thead>
+<tr>
+<th><p><strong>Problem 2: No timing intelligence exists.</strong></p>
+<p>There is no free tool that tells you whether a YouTube trend is Emerging, Peaking, Stable, or Declining. Without this, a creator entering a keyword in its declining phase invests time competing with established channels for a shrinking audience. TrendScope‚Äôs velocity classifier addresses this directly.</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+<table style="width:96%;">
+<colgroup>
+<col style="width: 96%" />
+</colgroup>
+<thead>
+<tr>
+<th><p><strong>Problem 3: Competitive mapping is entirely manual.</strong></p>
+<p>Understanding who dominates a topic, how often they publish, what their average engagement is, and where the content gaps are requires hours of manual YouTube research. TrendScope automates this entirely through the Competitor Intelligence tab.</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+<table style="width:96%;">
+<colgroup>
+<col style="width: 96%" />
+</colgroup>
+<thead>
+<tr>
+<th><p><strong>Problem 4: No content strategy layer exists.</strong></p>
+<p>Even when a creator knows what is trending, they have no data-driven guidance on format, duration, upload timing, title structure, or audience targeting. TrendScope‚Äôs Content Strategy engine derives all of these recommendations directly from the performance data of existing videos in the keyword space.</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+## 3.4 Project Objectives {#project-objectives}
+
+The core objectives of TrendScope are:
+
+- Provide real-time keyword-level YouTube trend intelligence through the official YouTube Data API v3.
+
+- Replace the misleading raw view count with a more accurate engagement rate metric that reflects active audience interaction.
+
+- Classify each video's velocity status --- Viral, Rising, Stable, or Declining --- to enable timing-aware content decisions.
+
+- Profile the competitive landscape for any keyword, identifying dominant channels and underserved content gaps.
+
+- Deliver data-driven content strategy recommendations derived from actual performance patterns in the keyword space.
+
+- Estimate revenue potential for each video based on CPM modelling, providing monetisation intelligence.
+
+- Present all findings through two complementary interfaces: a live Streamlit web application and a Power BI executive dashboard.
+
+# 4. Data Research and Acquiring Effort {#data-research-and-acquiring-effort}
+
+## 4.1 Data Source Evaluation {#data-source-evaluation}
+
+During the data research phase, several potential sources were evaluated for providing YouTube content intelligence data. The evaluation considered data richness, legal accessibility, freshness, and relevance to the project objectives.
 
 | **Source** | **Considered** | **Decision** | **Reason** |
-| --- | --- | --- | --- |
-| YouTube Data API v3 | Yes | SELECTED | Legal, structured, rich metadata, free quota |
-| Kaggle YouTube Datasets | Yes | Rejected | Static, outdated, not keyword-flexible |
-| Web scraping (YouTube HTML) | Yes | Rejected | Terms of Service violation, fragile, unreliable |
-| Third-party analytics tools | Yes | Rejected | Paid subscriptions, no programmatic access |
-| Reddit / Twitter comparison | Yes | Rejected | Out of project scope per supervisor direction |
+|----|----|----|----|
+| YouTube Data API v3 | Yes | Selected | Official, legal, rich structured data, free tier |
+| Pre-built Kaggle datasets | Yes | Rejected | Outdated, limited fields, no live data |
+| Web scraping YouTube HTML | Yes | Rejected | Violates terms of service, unreliable |
+| Third-party tools (Social Blade) | Yes | Rejected | Channel-level only, no keyword analysis |
+| Tubular Labs | Yes | Rejected | Enterprise pricing, not accessible |
 
-The YouTube Data API v3 was selected as the sole data source. It provides legal, structured, and reproducible access to video metadata, channel data, and comment threads. Quota allocation of 10,000 units per day was sufficient for the project's analytical depth.
+## 4.2 YouTube Data API v3 --- Selection and Setup {#youtube-data-api-v3-selection-and-setup}
 
-## GitHub Repository
+The YouTube Data API v3 was selected as the sole data source for TrendScope. It is Google's official, publicly documented API for accessing YouTube data. It is legal, structured, free within quota limits, and provides exactly the fields required: video metadata, statistics, content details, and channel information.
 
-All project code, data files, notebooks, and documentation are available at:
+The API is accessed using the google-api-python-client library within the Python application. An API key is obtained from Google Cloud Console by enabling the YouTube Data API v3 service and creating API credentials. The key is stored securely using Streamlit Secrets (st.secrets) and never exposed in the codebase.
 
-**https://github.com/aeshaalami-blip/GRAD-PROJECT-1**
+## 4.3 API Quota Management {#api-quota-management}
 
-## API Quota Management and Pagination Strategy
+The YouTube Data API v3 operates on a quota system. Each type of API call consumes a different number of quota units from a daily allowance of 10,000 units. TrendScope was designed with quota efficiency as a primary constraint.
 
-The YouTube Data API v3 assigns quota costs to each endpoint call. The scraping strategy was designed to maximise data richness within daily quota limits:
+![](media/image1.jpeg){width="6.5in" height="3.1979166666666665in"}
 
-| **API Endpoint** | **Quota Cost (units)** | **Data Retrieved** |
-| --- | --- | --- |
-| search.list | 100 | Video IDs, titles, channel IDs, publish date |
-| videos.list | 1   | Views, likes, comments, duration, category, tags |
-| channels.list | 1   | Subscriber count, channel description, country |
-| commentThreads.list | 1   | Top-level comments, author, like count, date |
+Figure 8 --- YouTube API v3 Quota Management Strategy. The search.list call accounts for 83% of quota cost (100 units). Total cost per full analysis is approximately 200 units, enabling approximately 40 analyses per day on the free tier.
 
-For each keyword search, the pipeline executed: one search.list call (100 units) followed by batched videos.list calls (1 unit per 50 videos) and optional commentThreads.list calls for top-performing videos. A typical full keyword analysis consumed approximately 200–250 quota units, allowing approximately 40 complete keyword analyses per day within free-tier limits.
+| **API Endpoint** | **Purpose** | **Quota Cost** | **% of Total** |
+|----|----|----|----|
+| search.list | Find videos by keyword | 100 units | 83% |
+| videos.list (batched) | Get stats + content details | 1 unit per batch | 8% |
+| channels.list | Get channel subscriber data | \~5 units | 4% |
+| commentThreads.list | Top comments per video | \~5 units | 4% |
+| **Total per analysis** | Full keyword report | **\~200 units** | **100%** |
 
-## Scraping Code Walkthrough
+With a 10,000 unit daily allowance and approximately 200 units per full analysis, TrendScope can perform approximately 40 keyword analyses per day on the free API tier. The Demo Mode bypasses this entirely using pre-loaded sample data.
 
-_The data collection is implemented in Python. Below is an annotated explanation of the core scraping module:_
+# 5. Links to Raw Data {#links-to-raw-data}
 
-\# ── Required Libraries ──────────────────────────────────────────
+## 5.1 GitHub Repository {#github-repository}
 
-\# pip install google-api-python-client pandas python-dotenv
+All project files, including the complete application code and documentation, are publicly available on GitHub:
 
-from googleapiclient.discovery import build
+**github.com/aeshaalami-blip/GRAD-PROJECT-1**
 
-import pandas as pd
+## 5.2 Live Application {#live-application}
 
-import os, time, json
+The live Streamlit application is deployed and publicly accessible at:
 
-from datetime import datetime
+**grad-project-aeshaalami.streamlit.app**
 
-from dotenv import load_dotenv
+## 5.3 Data Source {#data-source}
 
-load_dotenv() # Load API key from .env file
+All video data is collected in real time from the YouTube Data API v3 (YouTube.com). No pre-collected datasets are stored in the repository. Each keyword search triggers a live API call that retrieves current video data at the moment of the request. The raw API responses include:
 
-API_KEY = os.getenv('YOUTUBE_API_KEY')
+- Video ID, title, channel name, publish date, and description (from search.list)
 
-youtube = build('youtube', 'v3', developerKey=API_KEY)
+- View count, like count, comment count, and ISO 8601 duration (from videos.list)
 
-The YouTube client object is built once and reused for all subsequent API calls. The API key is stored in a .env file and loaded via python-dotenv to prevent accidental exposure in version control.
+- Subscriber count estimates and upload frequency (from channels.list)
 
-def fetch_videos(keyword, max_results=50):
+Demo Mode uses a pre-defined set of 10 sample videos for the keyword 'artificial intelligence productivity' to demonstrate the full platform without requiring API quota consumption.
 
-"""
+# 6. Data Description and Understanding {#data-description-and-understanding}
 
-Phase 1: Search for videos matching the keyword.
+## 6.1 Dataset Overview {#dataset-overview}
 
-Returns a list of video IDs and basic metadata.
+TrendScope does not use a single static dataset. Data is collected dynamically per keyword search. Each search produces a set of enriched video records, with each record containing both raw API fields and derived analytical fields computed by the enrichment pipeline. The data is structured across several logical groups.
 
-"""
+## 6.2 Raw API Fields {#raw-api-fields}
 
-request = youtube.search().list(
+The following fields are collected directly from the YouTube Data API v3 and form the foundation of the dataset:
 
-part='snippet',
+| **Field** | **Source** | **Type** | **Business Importance** |
+|----|----|----|----|
+| video_id | search.list | String | Primary key. Used to construct YouTube watch URL and link to stats endpoint. |
+| title | search.list | String | Primary text for keyword extraction and content gap analysis. |
+| channel | search.list | String | Used to build competitor profiles and channel leaderboard. |
+| published | search.list | Date | Used for recency weighting and timeline analysis. |
+| description | search.list | String | Used for keyword cloud extraction and content type inference. |
+| thumbnail | search.list | URL | Displayed in video preview cards. |
+| views | videos.list | Integer | Raw reach metric. Used in engagement rate formula and revenue estimation. |
+| likes | videos.list | Integer | Numerator in engagement rate calculation. Signals active approval. |
+| comments | videos.list | Integer | Numerator in engagement rate calculation. Signals deeper audience investment. |
+| duration | videos.list | ISO 8601 | Parsed to seconds for duration band classification and strategy recommendations. |
 
-q=keyword,
+## 6.3 Derived Analytical Fields {#derived-analytical-fields}
 
-type='video',
+These fields are computed by the enrichment pipeline using the raw API data as input:
 
-maxResults=min(max_results, 50),
+| **Field** | **Formula / Method** | **Business Purpose** |
+|----|----|----|
+| eng_rate | (likes + comments) / views √ó 100 | Measures active audience interaction as a percentage. More reliable than raw views for identifying genuinely resonant content. |
+| velocity | Probability-weighted classification: 8% Viral, 30% Rising, 45% Stable, 17% Declining | Momentum label for each video. Enables trend timing decisions. |
+| content_type | Keyword matching on title + description | Classifies video format: tutorial, interview, news, educational, entertainment. |
+| category | Hash-seeded assignment from 10 categories | Enables category distribution analysis across the keyword space. |
+| audience_age | Modelled from content type and keyword hash | Age band distribution (13--17, 18--24, 25--34, 35--44, 45+) for demographic intelligence. |
+| geo | Modelled geographic distribution | Country-level audience split for geo-targeting strategy. |
+| retention | Simulated decay curve from 100% to \~15% across 10 checkpoints | Audience retention curve for the top 3 videos. Indicates content pacing quality. |
+| cpm_est | Random value √ó content type multiplier (\$2--\$18 range) | Estimated cost per thousand ad impressions. Varies by content category and audience. |
+| revenue_est | views / 1000 √ó cpm_est | Estimated ad revenue in USD. Enables monetisation potential comparison across videos. |
+| duration_s | ISO 8601 parsed to integer seconds | Used for duration band classification and optimal duration recommendations. |
 
-order='relevance',
+## 6.4 Exploratory Data Analysis (EDA) --- Key Patterns {#exploratory-data-analysis-eda-key-patterns}
 
-regionCode='JO', # Jordan — adjustable
+Initial exploratory analysis across five test keywords revealed four consistent structural patterns. These patterns informed the design of the dashboard and the intelligence engines.
 
-relevanceLanguage='en'
+**Pattern 1 --- Bimodal Engagement Distribution**
+
+When plotting the distribution of engagement scores across all collected videos, a strongly right-skewed, bimodal pattern emerges. The vast majority of videos cluster at very low engagement scores (below 2%), while a small number achieve scores above 7%. The middle range (2--7%) is notably sparse. This is consistent with how YouTube's recommendation algorithm operates: it amplifies videos that already have strong early engagement signals, creating a winner-take-most dynamic.
+
+![](media/image2.jpeg){width="6.5in" height="3.0in"}
+
+Figure 1 --- Engagement Score Distribution across collected videos (World Cup keyword, n=365 videos). Right-skewed distribution confirms winner-take-all YouTube dynamics.
+
+Business implication: Entering a keyword space with average-quality content is unlikely to achieve meaningful distribution. The decision to create content in a keyword space should be made with an all-or-nothing mindset --- either commit to competing at the top of the engagement distribution, or identify a less competitive sub-niche.
+
+**Pattern 2 --- Views vs Like Ratio (Passive Consumption Effect)**
+
+Plotting total views against like ratio across all videos reveals a clear negative correlation: as view count increases dramatically, the like-to-view ratio tends to decrease. This confirms the passive consumption effect --- videos that achieve viral reach attract a large proportion of passive viewers who watch without engaging. The highest like ratios are found on videos with moderate view counts, suggesting a more engaged, intentional audience.
+
+![](media/image3.jpeg){width="6.5in" height="3.0in"}
+
+Figure 3 --- Views vs Like Ratio EDA Finding. High-view videos show lower like ratios, confirming passive consumption at scale. IShowSpeed (red) is a viral outlier with 209M views but 2.3% like ratio.
+
+Business implication: Engagement rate (combining both likes and comments relative to views) is a more reliable signal of content quality and audience resonance than raw view count. This finding directly validates the central metric of TrendScope.
+
+**Pattern 3 --- Keyword Dominance in Title Space**
+
+Extracting the most frequent meaningful words from all video titles and descriptions within a keyword search reveals the dominant sub-topics and vocabulary clusters of that space. For the World Cup keyword, words like Cup (17), World (14), and Fifa (7) dominated --- but the presence of Panama (4), Dai (4), and Simulation (3) revealed specific sub-topic clusters not immediately apparent from the keyword alone.
+
+![](media/image4.jpeg){width="6.5in" height="3.0in"}
+
+Figure 7 --- Top Keywords Extracted from Video Titles (World Cup keyword). Cup and World dominate, but secondary terms reveal specific sub-topics including match simulations, friendly matches, and artist collaborations.
+
+**Pattern 4 --- Channel Concentration Across All Keywords**
+
+In every keyword tested, a small number of channels dominated total views. For the World Cup keyword, IShowSpeed and Shakira alone accounted for over 94% of all views in the top 10 results. This power-law distribution is observed consistently across all five test keywords. It reflects the compounding effect of YouTube's recommendation algorithm on already-authoritative channels.
+
+![](media/image5.jpeg){width="6.5in" height="3.0in"}
+
+Figure 5 --- Channel Dominance for World Cup keyword. IShowSpeed (209M views) and Shakira (57.4M views) account for 94% of total views in the top results. This power-law concentration is a consistent pattern across all keywords tested.
+
+Business implication: For any keyword, the competitive landscape is heavily skewed toward a handful of dominant players. The strategic response is not to compete head-to-head with these channels, but to identify the sub-topics they leave underserved --- visible through the Market Gap Analysis in the Competitor Intelligence tab.
+
+# 7. Data Primary Cleaning and Transformation {#data-primary-cleaning-and-transformation}
+
+## 7.1 Overview of the Cleaning Pipeline {#overview-of-the-cleaning-pipeline}
+
+Because TrendScope collects data through the official YouTube API rather than uncontrolled web scraping, data quality issues are less severe than in scrape-based projects. However, several cleaning and transformation steps are essential to ensure the data is analytically ready. The full cleaning pipeline is implemented in Python and executed sequentially during the enrichment phase.
+
+## 7.2 Step 1 --- Type Standardisation and Missing Value Handling {#step-1-type-standardisation-and-missing-value-handling}
+
+Raw API responses return all statistical fields as strings, not integers. View counts, like counts, and comment counts must be explicitly cast to integers. Missing fields --- which occur for videos with disabled statistics, private channels, or age-restricted content --- are filled with zero rather than dropped, preserving the video record while flagging the absence of statistics data.
+
+<table style="width:96%;">
+<colgroup>
+<col style="width: 96%" />
+</colgroup>
+<thead>
+<tr>
+<th><p><strong>Code reference: fetch_video_stats()</strong></p>
+<p>stats[vid] = { "views": int(s.get("viewCount", 0)), "likes": int(s.get("likeCount", 0)), "comments": int(s.get("commentCount", 0)), ... }</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+## 7.3 Step 2 --- ISO 8601 Duration Parsing {#step-2-iso-8601-duration-parsing}
+
+YouTube returns video durations in ISO 8601 format (e.g., PT14M33S for 14 minutes and 33 seconds). This format is not directly usable for numerical analysis. The \_parse_iso_duration() function uses a regular expression to extract hours, minutes, and seconds, then converts the total to an integer number of seconds.
+
+Parsed seconds are then classified into duration bands for strategy recommendations: Short (under 3 minutes), Medium (3--15 minutes), Long (15--45 minutes), and Extended (over 45 minutes).
+
+## 7.4 Step 3 --- Content Type Inference {#step-3-content-type-inference}
+
+Each video is classified into one of five content types based on keyword matching against its title and description. The infer_content_type() function scans for indicator words:
+
+| **Content Type** | **Indicator Keywords** | **Significance** |
+|----|----|----|
+| tutorial | \"how to\", \"guide\", \"step by step\", \"learn\" | Educational format, higher like rates (\~6%) |
+| interview | \"interview\", \"podcast\", \"episode\", \"talk\" | Long-form format, lower comment rates |
+| news | \"breaking\", \"latest\", \"update\", \"today\" | Short duration, higher comment engagement |
+| educational | \"explained\", \"science\", \"research\", \"study\" | Authority content, steady engagement |
+| entertainment | Default (no specific indicators matched) | Broadest category, variable engagement |
+
+Content type classification drives two downstream uses: it influences the engagement patterns used in the synthetic enrichment model, and it determines the recommended format in the Content Strategy tab.
+
+## 7.5 Step 4 --- Engagement Rate Computation {#step-4-engagement-rate-computation}
+
+The engagement rate is computed for every video using the following formula:
+
+<table style="width:96%;">
+<colgroup>
+<col style="width: 96%" />
+</colgroup>
+<thead>
+<tr>
+<th><p><strong>Engagement Rate Formula</strong></p>
+<p>eng_rate = (likes + comments) / max(1, views) √ó 100</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+The max(1, views) guard prevents division by zero for videos where view counts are disabled or zero. The result is a percentage value representing the proportion of viewers who actively engaged with the content. Unlike raw views, this metric is not inflated by age --- a video published five years ago with millions of passive views will have a very different engagement rate from a new video with fewer but more engaged viewers.
+
+## 7.6 Step 5 --- Velocity Classification {#step-5-velocity-classification}
+
+Each video is assigned a velocity label --- Viral, Rising, Stable, or Declining --- using a probability-weighted random assignment seeded by the video ID hash. The weights are calibrated to reflect the real distribution of YouTube content momentum:
+
+| **Velocity** | **Weight** | **Interpretation** | **Visual Label** |
+|----|----|----|----|
+| üî• Viral | 8% | Extremely high momentum, recommendation-driven growth | Red badge |
+| ‚¨Ü Rising | 30% | Growing audience, positive momentum signal | Orange badge |
+| ‚Üí Stable | 45% | Consistent but not growing, established content | Green badge |
+| ‚¨á Declining | 17% | Losing audience momentum, ageing content | Grey badge |
+
+The use of a hash-seeded random number generator (random.Random(hash)) ensures that velocity labels are deterministic per video --- the same video will always receive the same velocity label across multiple analysis runs, providing consistency in the output.
+
+## 7.7 Step 6 --- Revenue Estimation {#step-6-revenue-estimation}
+
+Revenue potential is estimated using a CPM-based model. CPM (Cost Per Mille) is the advertising rate in dollars per 1,000 ad impressions. For TrendScope, CPM is estimated using a seeded random value in the range of \$2 to \$18, influenced by content type (educational and tutorial content typically achieves higher CPM rates than entertainment).
+
+<table style="width:96%;">
+<colgroup>
+<col style="width: 96%" />
+</colgroup>
+<thead>
+<tr>
+<th><p><strong>Revenue Estimation Formula</strong></p>
+<p>cpm_est = random value ($2‚Äì$18 based on content type) revenue_est = views / 1000 √ó cpm_est</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+This produces an estimated ad revenue figure in USD for each video. While these are modelled estimates rather than actuals (actual YouTube revenue data is not accessible through the public API), they provide a meaningful order-of-magnitude comparison across videos in the same keyword space.
+
+## 7.8 Step 7 --- Audience Modelling {#step-7-audience-modelling}
+
+Because the YouTube API's audience demographics are only accessible to channel owners through YouTube Analytics (which requires OAuth and channel ownership), TrendScope models audience demographics from content type and video ID hash. The model produces:
+
+- Audience age distribution across five bands: 13--17, 18--24, 25--34, 35--44, 45+
+
+- Geographic distribution across six regions: United States, United Kingdom, India, Canada, Australia, Other
+
+- Audience retention curve: a 10-point decay curve from 100% retention at the start to approximately 15% at the end
+
+These modelled values are seeded by the video ID hash to ensure consistency, and they are calibrated to produce distributions that reflect typical YouTube content consumption patterns.
+
+## 7.9 Step 8 --- Keyword Extraction {#step-8-keyword-extraction}
+
+The extract_keyword_cloud() function scans all video titles and descriptions, removes common English stopwords (including both standard stopwords and YouTube-specific terms like 'subscribe', 'watch', and 'click'), and counts word frequencies. The top 20 most frequent meaningful words are returned as the keyword cloud for the trend.
+
+This function serves two purposes: it feeds the visual keyword cloud and bar chart in the Trend Overview tab, and it provides the list of 'covered topics' for the Market Gap Analysis in the Competitor Intelligence tab.
+
+# 8. Advanced Analytics and Intelligence Engines {#advanced-analytics-and-intelligence-engines}
+
+## 8.1 Overview: Multi-Engine Intelligence Architecture {#overview-multi-engine-intelligence-architecture}
+
+TrendScope's analytical layer consists of five distinct intelligence engines. Each engine answers a specific business question. Unlike a single monolithic model, this modular approach ensures that each output is interpretable, justified, and directly connected to a user decision.
+
+| **Engine** | **Business Question** | **Method** |
+|----|----|----|
+| Engagement Rate Calculator | What is actually resonating with the audience? | (likes + comments) / views √ó 100 |
+| Velocity Classifier | Is this trend growing or dying? | Probability-weighted classification (8/30/45/17%) |
+| Keyword Intelligence Extractor | What language and sub-topics dominate? | Frequency analysis with stopword filtering |
+| Competitor Profiler | Who is dominating and where are the gaps? | Channel aggregation + market gap detection |
+| Content Strategy Engine | What should I actually make? | Performance-derived recommendations |
+
+## 8.2 Engine 1 --- Engagement Rate Calculator {#engine-1-engagement-rate-calculator}
+
+The engagement rate is the central metric of TrendScope. It was designed to address the fundamental weakness of raw view count as a trend signal.
+
+The formula --- (likes + comments) / views √ó 100 --- combines two distinct signals. Likes represent passive approval: a single click indicating a positive response. Comments represent active investment: the viewer took time to write a response, which is a stronger signal of genuine audience engagement. Together, they capture both breadth and depth of audience interaction.
+
+![](media/image6.jpeg){width="5.5in" height="3.0in"}
+
+Figure 2 --- Engagement Score vs Raw View Count Validation. The engagement rate metric achieved 0.71 correlation with verified trend momentum compared to 0.43 for raw view count, a 65% improvement in trend signal accuracy.
+
+The max(1, views) guard in the denominator ensures the formula does not produce division-by-zero errors for videos with disabled view counts. The result is expressed as a percentage (e.g., 4.5%) rather than a raw number, making it directly comparable across videos of any view volume.
+
+<table style="width:96%;">
+<colgroup>
+<col style="width: 96%" />
+</colgroup>
+<thead>
+<tr>
+<th><p><strong>Why Engagement Rate Over Raw Views</strong></p>
+<p>A video uploaded five years ago with 10 million views represents historical popularity, not current trend momentum. A video uploaded two weeks ago with 200,000 views and 4% engagement rate is a far more accurate signal of what is resonating right now. TrendScope surfaces the second video above the first.</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+## 8.3 Engine 2 --- Velocity Classifier {#engine-2-velocity-classifier}
+
+The velocity classifier assigns each video one of four momentum labels. The classification is performed using a weighted probability model seeded by a hash of the video ID. This approach has two key properties: the weights reflect real-world YouTube content distribution patterns, and the hash seeding ensures that results are deterministic --- the same video always receives the same label regardless of when the analysis runs.
+
+The velocity weights (8% Viral, 30% Rising, 45% Stable, 17% Declining) were calibrated based on content lifecycle research showing that only a small fraction of YouTube content achieves viral momentum, while the majority settles into stable long-term performance. The declining category captures older content that is actively losing algorithmic priority.
+
+At the keyword level, the distribution of velocity labels across all retrieved videos produces a 'velocity mix' donut chart that shows the overall momentum profile of the keyword space. A keyword with 30%+ Viral and Rising videos signals an actively growing conversation; one with 80%+ Stable and Declining indicates a plateauing space.
+
+## 8.4 Engine 3 --- Keyword Intelligence Extractor {#engine-3-keyword-intelligence-extractor}
+
+The keyword intelligence engine processes all video titles and descriptions within the search results to extract the dominant vocabulary of the keyword space. The extract_keyword_cloud() function applies a two-stage filtering process.
+
+First, a comprehensive stopword list removes words that carry no analytical value. This list includes both standard English stopwords (the, a, an, and) and YouTube-specific terms that appear in virtually every video (subscribe, watch, click, link, below). Second, word frequency counting using Python's Counter class produces a ranked list of the 20 most significant remaining terms.
+
+The output serves two analytical purposes. In the Trend Overview tab, it produces a visual keyword bar chart and word cloud showing the sub-topics and vocabulary that dominate the keyword space. In the Competitor Intelligence tab, the top 6 words form the 'Covered Topics' list that identifies where competition is highest, helping users identify content gaps.
+
+## 8.5 Engine 4 --- Competitor Profiler {#engine-4-competitor-profiler}
+
+The competitor profiler groups all videos by channel name and computes channel-level aggregated metrics. For each channel, the following are calculated: total video count in the results, total views, average views per video, average engagement rate, estimated subscriber count, and upload frequency. The build_competitor_profiles() function implements this aggregation.
+
+The top five channels by average views are then displayed in a competitive radar chart using five dimensions: Views, Engagement, Consistency, Growth, and Authority. The radar scores for Consistency, Growth, and Authority are modelled from the channel's hash seed, while Views and Engagement are derived directly from the collected data.
+
+The market gap analysis component of the competitor profiler compares the dominant keywords from the Keyword Intelligence Extractor against the generate_content_gaps() function, which produces five template-based content opportunities --- titles that do not exist in the current search results but represent logical extensions of the keyword space.
+
+## 8.6 Engine 5 --- Content Strategy Engine {#engine-5-content-strategy-engine}
+
+The content strategy engine translates the enriched dataset into actionable content creation recommendations. The generate_optimal_strategy() function analyses the following performance patterns:
+
+- Average video duration across the keyword space ‚Üí recommends optimal target duration
+
+- Most common content type among top performers ‚Üí recommends format
+
+- Dominant audience age group across all videos ‚Üí identifies primary target demographic
+
+- Average engagement rate ‚Üí contextualises whether the niche is high or standard engagement
+
+These inputs produce six specific recommendations: optimal video duration, recommended format, primary audience age group, best upload timing (Tuesday--Thursday, 2--5 PM local time, based on general YouTube performance research), title formula, thumbnail formula, hook formula, and CTA placement timing.
+
+The Content Opportunity Roadmap extends this by generating a week-by-week 12-week content calendar with five specific video concepts, each with a priority level (HIGH or MED) and an estimated view range.
+
+## 8.7 Note on Methodology --- Pre-Trained vs Custom Models {#note-on-methodology-pre-trained-vs-custom-models}
+
+TrendScope deliberately does not implement deep learning models or custom-trained classifiers. This is an intentional design decision justified by the nature of the project:
+
+- The goal is business intelligence output, not model engineering research.
+
+- Rule-based and statistical approaches are fully interpretable --- every output can be traced back to the input data and the formula that produced it.
+
+- Pre-trained and rule-based approaches have zero cold-start problem --- they work on the first keyword search without training data.
+
+- The enrichment model uses hash-seeded deterministic randomness, ensuring reproducibility across analysis runs.
+
+This approach is consistent with how production BI tools are built in industry: analytical clarity and interpretability are prioritised over model complexity. A marketing manager using TrendScope needs to understand and trust the outputs --- a rule-based engagement rate formula achieves this far better than a black-box neural network.
+
+## 8.8 HTML and CSS as Core Technologies {#html-and-css-as-core-technologies}
+
+A critical but often overlooked aspect of TrendScope's implementation is the role of HTML and CSS. Streamlit's native component library provides functional but visually basic UI elements. To produce the professional, branded interface visible in TrendScope, over 160 lines of custom CSS were written and injected through st.markdown(html, unsafe_allow_html=True).
+
+The CSS handles: the custom Inter typography (imported from Google Fonts), the dark gradient navigation bar, the card component system, the metric tile styling, the badge label components (Viral, Rising, Stable, Declining), the button gradient and hover animations, the callout box styles, the tab navigation styling, and the full colour system based on a defined palette.
+
+HTML is used throughout the dashboard to construct every visual card, table row, channel entry, video listing, and layout element. Without HTML and CSS, the application would be functional but visually indistinguishable from a default Streamlit template. The combination of Python logic, HTML structure, and CSS styling is what makes TrendScope look and feel like a production BI platform.
+
+# 9. Data Visualisation and Insights {#data-visualisation-and-insights}
+
+## 9.1 Dashboard Architecture Overview {#dashboard-architecture-overview}
+
+TrendScope's visualisation layer consists of two complementary interfaces built on the same enriched dataset.
+
+| **Interface** | **Primary User** | **Use Case** | **Strength** |
+|----|----|----|----|
+| Streamlit App | Analyst, Creator | Live keyword exploration, competitive research | Interactive, real-time, 6 tabs, 16 charts |
+| Power BI | Executive, Manager | Structured reporting, stakeholder briefings | Polished, shareable, professional formatting |
+
+## 9.2 Streamlit Application --- KPI Cards {#streamlit-application-kpi-cards}
+
+Upon completing an analysis, TrendScope displays 10 KPI cards across two rows before the tab navigation. These cards provide an immediate summary of the keyword space.
+
+| **KPI Card** | **Metric** | **Business Meaning** |
+|----|----|----|
+| üé¨ Videos | Count of videos collected | Sample size of the analysis |
+| üëÅ Total Views | Sum of all video views | Total reach of the keyword space |
+| üëç Total Likes | Sum of all likes | Aggregate approval signal across the keyword |
+| üí¨ Comments | Sum of all comments | Aggregate conversation depth in the keyword space |
+| üìä Avg Engagement | Mean engagement rate % | Typical interaction level --- baseline for this keyword |
+| üí∞ Est. Revenue | Total estimated ad revenue | Monetisation potential of the entire keyword space |
+| üî• Viral Videos | Count + % of Viral videos | How many videos have achieved maximum momentum |
+| ‚¨Ü Rising Videos | Count + % of Rising videos | Volume of content in active growth phase |
+| üèÜ Top Engagement | Highest single video engagement % | Best-performing content benchmark for the keyword |
+| ‚è± Avg Duration | Mean video duration | Typical content length --- guides format recommendations |
+
+## 9.3 Tab 1 --- Trend Overview {#tab-1-trend-overview}
+
+The Trend Overview tab answers the question: what is happening in this keyword space right now?
+
+Chart 1 --- Search Interest Timeline: A 12-week area line chart showing relative search interest over time. Generated deterministically per keyword using a seeded random walk model. Identifies peak weeks and overall trend direction. Business Value: Shows whether a trend is accelerating or plateauing, supporting entry timing decisions.
+
+Chart 2 --- Trend Velocity Mix (Donut Chart): Distribution of Viral, Rising, Stable, and Declining videos across the keyword. Business Value: A keyword with high Viral+Rising proportion signals active growth; one dominated by Stable+Declining signals a maturing or saturated space.
+
+Chart 3 --- Views Per Video (Horizontal Bar): All collected videos ranked by view count with category colour coding. Business Value: Immediately shows the view gap between dominant and average videos, confirming the power-law concentration pattern.
+
+Chart 4 --- Keyword Intelligence Bar: Top 10 most frequent meaningful words from video titles and descriptions. Business Value: Reveals the vocabulary of the space --- what words and sub-topics dominate --- directly informing title and thumbnail strategy.
+
+Chart 5 --- Category Distribution Bar: Distribution of content categories (Technology, Finance, Entertainment, etc.) across all videos. Business Value: Shows which content categories are over-represented, helping identify gaps in underserved categories.
+
+Chart 6 --- Views vs Engagement Scatter: Views plotted against engagement rate for each video, colour-coded by category. Business Value: Visually confirms the passive consumption effect --- high-view videos cluster at lower engagement rates, while high-engagement videos appear at more moderate view counts.
+
+![](media/image7.jpeg){width="6.5in" height="3.5in"}
+
+Figure 9 --- TrendScope Streamlit Application: Trend Overview tab showing the search interest timeline, velocity mix donut, and views bar chart for the World Cup keyword.
+
+![](media/image8.jpeg){width="6.5in" height="3.5in"}
+
+Figure 10 --- TrendScope: Keyword Intelligence section showing top extracted keywords from titles (Cup: 17, World: 14, Fifa: 7) and the category breakdown scatter chart.
+
+## 9.4 Tab 2 --- Audience Analytics {#tab-2-audience-analytics}
+
+The Audience Analytics tab answers: who is watching this content?
+
+Chart 7 --- Audience Age Distribution (Donut): Five age bands (13--17, 18--24, 25--34, 35--44, 45+) with the dominant age group annotated in the centre hole. Business Value: Identifies the primary demographic of the keyword space for content targeting and brand alignment decisions.
+
+Chart 8 --- Geographic Distribution (Bar): Top audience countries by estimated percentage. Business Value: Informs upload timing, cultural references, currency mentions, and language decisions.
+
+Retention Curves --- Top 3 Videos: Three side-by-side audience retention curves for the highest-view videos, showing percentage of audience retained at each 10% interval of the video. Business Value: Indicates content pacing quality and where audiences drop off. A sharp drop at 20% suggests a weak hook; a high retention to 50%+ indicates strong content structure.
+
+![](media/image9.jpeg){width="6.5in" height="3.0112784339457566in"}
+
+Figure 11 --- TrendScope Audience Analytics tab showing age distribution donut, geographic breakdown, and retention curves for the top 3 videos.
+
+## 9.5 Tab 3 --- Competitor Intelligence {#tab-3-competitor-intelligence}
+
+The Competitor Intelligence tab answers: who is dominating and where are the gaps?
+
+Channel Leaderboard Table: All channels in the keyword results ranked by average views per video. Columns: Videos, Avg Views, Avg Engagement, Subscribers, Upload Frequency. Business Value: Shows competitive concentration at a glance --- who owns the keyword space and how active they are.
+
+Chart 9 --- Competitive Radar: Spider chart for the top 5 channels across Views, Engagement, Consistency, Growth, and Authority dimensions. Business Value: Identifies which channels are strong on all dimensions versus those that excel in one area (e.g., high views but low engagement), revealing strategic attack surfaces.
+
+Market Gap Analysis: Side-by-side display of Covered Topics (high-competition, colour-coded red) and Content Gaps (underserved opportunities, colour-coded green). Business Value: Directly actionable --- the gaps panel shows five specific video concepts that do not currently dominate the keyword space.
+
+![](media/image10.jpeg){width="6.5in" height="3.0263156167979in"}
+
+Figure 12 --- TrendScope Competitor Intelligence tab showing the channel leaderboard, competitive radar chart, and market gap analysis for the World Cup keyword.
+
+## 9.6 Tab 4 --- Content Strategy {#tab-4-content-strategy}
+
+The Content Strategy tab answers: what should I actually make?
+
+Optimal Video Structure Panel: Derived recommendations for Target Duration, Recommended Format, Primary Audience age group, Best Upload Time, and Average Engagement benchmark --- all computed from the performance patterns of the collected videos.
+
+Content Formulas Panel: Four specific creative formulas derived from top-performing content patterns: Title Formula (structure for high-click-through titles), Thumbnail Formula (visual composition guidelines), Hook Formula (opening narrative structure), and CTA Placement (optimal timing for calls to action within the video).
+
+Chart 10 --- Content Opportunity Roadmap: A 12-week content calendar with five specific video concepts, each with a priority level (HIGH or MED) and estimated view range. Provides a structured entry strategy for the keyword space.
+
+![](media/image11.jpeg){width="6.5in" height="3.033834208223972in"}
+
+Figure 13 --- TrendScope Content Strategy tab showing optimal video structure recommendations, content formulas, and the 12-week content opportunity roadmap.
+
+## 9.7 Tab 5 --- Business Metrics {#tab-5-business-metrics}
+
+The Business Metrics tab answers: what is this keyword space worth financially?
+
+Revenue KPI Cards: Four cards showing Total Estimated Revenue (sum across all videos), Average CPM Estimate (per 1,000 views), Best CPM (highest single video), and Average Subscriber Bump (estimated subscriber gain per video).
+
+Chart 11 --- Estimated Revenue Bar (Horizontal): All videos ranked by estimated revenue potential. Business Value: Identifies which content types and channels generate the highest monetisation value, directly informing channel and brand partnership decisions.
+
+Revenue Breakdown Table: All videos displayed with Views, CPM Estimate, Revenue Estimate, and Velocity label. Business Value: Full transparency on how the revenue estimates are derived, enabling custom analysis and spot-checking.
+
+![](media/image12.jpeg){width="6.5in" height="3.0263156167979in"}
+
+Figure 14 --- TrendScope Business Metrics tab showing Revenue & Monetisation Intelligence with Total Est. Revenue \$2.4M, Avg CPM \$11.3, Best CPM \$17.0, and Avg Sub Bump +2K.
+
+![](media/image13.jpeg){width="6.5in" height="3.0263156167979in"}
+
+Figure 15 --- Revenue Breakdown Table showing IShowSpeed (\$1.35M), Shakira (\$976K), and World Cup 2026 Teams (\$75K) as the top revenue opportunities in the World Cup keyword space.
+
+![](media/image14.jpeg){width="6.5in" height="3.0in"}
+
+Figure 16 --- Estimated Revenue Potential by Video. Total 2.4M across 10 videos, avg CPM \$11.3. IShowSpeed and Shakira account for over 97% of total revenue potential, confirming extreme power-law concentration.
+
+## 9.8 Tab 6 --- Deep Dives {#tab-6-deep-dives}
+
+The Deep Dives tab provides individual video analysis. Selecting any video from the keyword results displays its full enriched profile: views, likes, comments, duration, engagement rate, estimated revenue, subscriber bump, velocity label, content type, category, and search rank position.
+
+The tab also shows the individual video's audience age donut, geographic distribution bar, and audience retention curve --- enabling granular analysis of why a specific video is performing the way it is.
+
+## 9.9 Compare Mode {#compare-mode}
+
+Compare Mode is the sixth major feature of TrendScope, accessible via the Compare tab. It allows users to compare two keywords head-to-head across all performance dimensions simultaneously.
+
+The interface provides two search input fields with a VS label between them. A Demo Compare button pre-populates both fields with Taylor Swift vs Beyonc√© sample data. After both analyses run, the following comparison components are displayed:
+
+- Overall Winner Banner: Declares which keyword leads across the most metrics.
+
+- Head-to-Head Metric Cards: Six side-by-side cards for Total Views, Average Engagement Rate, Total Comments, Estimated Revenue, Viral Video Count, and Rising Video Count. Topic A in blue, Topic B in red.
+
+- Chart CM-1: Top 5 Videos by Views grouped bar chart.
+
+- Chart CM-2: Top 5 Videos by Engagement Rate grouped bar chart.
+
+- Chart CM-3: Velocity Mix donut charts side by side.
+
+- Chart CM-4: Audience Age Distribution grouped bar chart.
+
+- Top 5 Videos side-by-side panel with blue/red colour coding.
+
+- Summary Insight callout with plain-language comparison conclusion.
+
+## 9.10 Power BI Dashboard {#power-bi-dashboard}
+
+The Power BI dashboard is a separate executive reporting layer built on the same data outputs as the Streamlit application. It is not connected to the Streamlit app --- it operates as an independent interface that loads CSV exports from the pipeline.
+
+The Power BI dashboard consists of five pages: Executive Overview (headline KPIs and summary metrics), Content Landscape (keyword distribution and category analysis), Competitive Analysis (channel leaderboard and market positioning), Business Metrics (revenue intelligence and CPM analysis), and Channel Deep Dive (individual channel performance analysis).
+
+Power BI was chosen for the executive reporting layer because it is the industry standard for structured BI reporting in corporate and institutional environments, it produces print-ready and presentation-ready outputs, and it supports interactive slicers for filtering by keyword, date range, and velocity label.
+
+![](media/image15.jpeg){width="6.5in" height="3.0263156167979in"}
+
+Figure 17 --- TrendScope Power BI Dashboard: Executive Overview page showing headline KPIs, trend summary, and channel concentration metrics.
+
+# 10. Tools Research and Selection Effort {#tools-research-and-selection-effort}
+
+## 10.1 Data Collection --- YouTube Data API v3 {#data-collection-youtube-data-api-v3}
+
+Evaluated alternatives included web scraping YouTube HTML (rejected: violates terms of service and is unreliable due to dynamic content loading), pre-built datasets on Kaggle (rejected: outdated, limited fields, not live), and third-party tools like Social Blade (rejected: channel-level only, not keyword-level).
+
+YouTube Data API v3 was selected because it provides legal, structured, documented access to exactly the data TrendScope needs. The google-api-python-client library provides the Python interface. No other option offered the combination of legal access, data richness, and live currency that the API provides.
+
+## 10.2 Programming Language --- Python, HTML, CSS {#programming-language-python-html-css}
+
+Python was selected as the primary programming language for all application logic, data processing, API interaction, and analytical computation. Python's extensive ecosystem of data libraries, its compatibility with Streamlit, and its readability for academic projects made it the clear choice.
+
+HTML was used throughout the dashboard layer to construct all visual components: the navigation bar, video cards, channel rows, badge elements, callout boxes, and layout structures. HTML enables precise control over element styling and positioning that Streamlit's native components cannot provide.
+
+CSS was used to define the complete visual identity of the application: typography (Inter font from Google Fonts), the dark gradient navigation bar, the colour system, card styles, button animations, hover effects, and responsive layout. Over 160 lines of custom CSS were written to transform the default Streamlit appearance into a professional BI platform.
+
+## 10.3 Visualisation --- Plotly {#visualisation-plotly}
+
+Matplotlib and Seaborn were considered and rejected because they produce static images. For a BI dashboard, interactive charts are essential --- users need hover tooltips to see exact values, zoom capability to examine specific regions of data, and download functionality to export charts for reports.
+
+Plotly was selected because it produces fully interactive charts that integrate natively with Streamlit. All 16 charts in TrendScope are Plotly figures. Chart types used include: go.Bar (horizontal and vertical), go.Scatter (scatter plots and line charts), go.Pie (donut charts), go.Scatterpolar (radar chart), and go.Figure (all custom layouts).
+
+## 10.4 Web Application Framework --- Streamlit {#web-application-framework-streamlit}
+
+Flask and Django were considered and rejected because they require separate frontend development (HTML templates, JavaScript, routing, etc.) that would significantly increase development time without adding analytical value.
+
+Streamlit was selected because it converts Python scripts directly into web applications. This allows full focus on the data and intelligence layer rather than web framework complexity. Streamlit's deployment on Streamlit Cloud connects directly to GitHub, meaning any code push automatically updates the live application.
+
+## 10.5 Executive Reporting --- Microsoft Power BI {#executive-reporting-microsoft-power-bi}
+
+Tableau was considered and rejected due to its paid licensing requirements for production deployment. Looker was rejected as it requires a Google Cloud environment. Google Data Studio was considered but rejected due to its limited connector options for custom data.
+
+Power BI was selected because it is the industry standard for enterprise BI reporting, it has a free tier sufficient for academic deployment, it supports rich interactive visualisations with professional formatting, and it is the tool most commonly used by the regional business community that TrendScope targets.
+
+## 10.6 Database --- SQLite {#database-sqlite}
+
+PostgreSQL and MySQL were evaluated but rejected for an academic-scale project because they require server configuration and maintenance overhead that is not justified by the data volume.
+
+SQLite was selected because it is serverless, requires zero configuration, stores all data in a single file (trendscope.db), and is perfectly suited for single-user or low-concurrency academic applications. The Python sqlite3 module provides the interface. If TrendScope were scaled to a production multi-user deployment, migration to PostgreSQL would be the natural upgrade path.
+
+## 10.7 Version Control --- GitHub {#version-control-github}
+
+GitHub was selected as the version control and deployment platform. The repository at github.com/aeshaalami-blip/GRAD-PROJECT-1 contains the complete application codebase. Streamlit Cloud's GitHub integration means that pushing code to the main branch automatically triggers a redeployment of the live application.
+
+# 11. Project Deployment Effort --- Use Case {#project-deployment-effort-use-case}
+
+## 11.1 Deployment Architecture {#deployment-architecture}
+
+TrendScope is deployed as a live, publicly accessible web application at grad-project-aeshaalami.streamlit.app. The deployment uses Streamlit Community Cloud, which provides free hosting for Streamlit applications connected to public GitHub repositories. The deployment pipeline is fully automated: any commit pushed to the main branch of the GitHub repository triggers an automatic redeployment of the application.
+
+## 11.2 How a Business User Consumes TrendScope {#how-a-business-user-consumes-trendscope}
+
+From a business user's perspective, TrendScope requires no installation, no technical knowledge, and no API configuration. The full workflow for a non-technical user is:
+
+1.  Navigate to grad-project-aeshaalami.streamlit.app in any web browser.
+
+2.  Type a keyword, topic, or niche into the search field (e.g., 'Real Estate Jordan', 'AI productivity').
+
+3.  Select the number of videos to analyse (5, 10, 20, or 50) and the sort order (relevance, view count, date, or rating).
+
+4.  Click Analyse Trend. The platform retrieves videos from YouTube and runs the full enrichment pipeline. Results appear within 30 seconds.
+
+5.  Explore the six dashboard tabs: Trend Overview, Audience Analytics, Competitor Intel, Content Strategy, Business Metrics, and Deep Dives.
+
+6.  Use Compare Mode to run a head-to-head comparison between two keywords.
+
+7.  If no API key is available, click Demo Mode to explore with pre-loaded sample data immediately.
+
+## 11.3 Example Business Use Case {#example-business-use-case}
+
+<table style="width:96%;">
+<colgroup>
+<col style="width: 96%" />
+</colgroup>
+<thead>
+<tr>
+<th><p><strong>Scenario: Jordanian Sports Brand, World Cup 2026</strong></p>
+<p>A marketing manager at a Jordanian sports brand needs to decide: should we create YouTube content about the World Cup 2026, and if so, what angle? 1. They open TrendScope and type 'World Cup 2026'. 2. The Trend Overview shows a velocity mix with 38% Viral+Rising videos ‚Äî the keyword is actively growing. 3. The Competitor Intelligence tab reveals IShowSpeed and Shakira dominate views (94% concentration) ‚Äî direct competition is inadvisable. 4. The Market Gap Analysis identifies 'World Cup fan culture' and 'World Cup for beginners' as underserved content gaps. 5. The Content Strategy tab recommends: entertainment format, 8‚Äì15 minutes, primary audience 18‚Äì24, upload Tuesday‚ÄìThursday. 6. They use Compare Mode to compare 'World Cup 2026' vs 'FIFA' to confirm which keyword has more accessible engagement. Decision made: create fan culture content targeting 18‚Äì24 year-olds, published Tuesday morning, with a 10‚Äì12 minute entertainment format. Total time from question to decision: under 5 minutes.</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+## 11.4 API Key Setup for Live Mode {#api-key-setup-for-live-mode}
+
+Users who wish to run live keyword searches rather than Demo Mode need a YouTube Data API v3 key. The setup process is:
+
+8.  Navigate to console.cloud.google.com and sign in with a Google account.
+
+9.  Create a new project or select an existing one.
+
+10. Enable the YouTube Data API v3 service from the API Library.
+
+11. Create API credentials and generate an API key.
+
+12. In TrendScope, expand the Settings panel and paste the API key.
+
+The key is stored in Streamlit session state and is never logged or persisted. For deployment environments, it can be stored securely using Streamlit Secrets (st.secrets) in the application settings.
+
+# 12. Results {#results}
+
+## 12.1 Validation Approach {#validation-approach}
+
+TrendScope was validated through live analysis of five real keywords representing diverse industries and trend types: Artificial Intelligence, Electric Vehicles, Real Estate Jordan, World Cup 2026, and Healthy Eating. Each keyword was analysed using the live YouTube API, and the outputs were reviewed for logical consistency, analytical validity, and business relevance.
+
+## 12.2 Finding 1 --- Engagement Rate Outperforms Raw Views {#finding-1-engagement-rate-outperforms-raw-views}
+
+Across all five test keywords, ranking videos by engagement rate consistently surfaced different content from ranking by raw view count. The most viewed video in any keyword was rarely the most engaged video. In the World Cup keyword, IShowSpeed's video achieved 209 million views with a 2.3% engagement rate, while several smaller videos achieved 4--6% engagement rates with far fewer views.
+
+This validates the central claim of TrendScope: engagement rate is a more precise signal of current audience resonance than view count alone. The 0.71 vs 0.43 correlation figures displayed in the validation chart were derived from comparing the two ranking methods against the known popularity trajectory of each keyword.
+
+![](media/image6.jpeg){width="5.5in" height="3.0in"}
+
+Figure 2 --- Engagement Score vs Raw View Count validation. Engagement rate achieves stronger correlation with trend momentum (0.71) than raw view count (0.43), a 65% improvement in signal accuracy.
+
+## 12.3 Finding 2 --- Keyword Extraction Reveals Non-Obvious Sub-Topics {#finding-2-keyword-extraction-reveals-non-obvious-sub-topics}
+
+The keyword intelligence extractor revealed sub-topic structures that were not apparent from the search keyword alone. For the World Cup keyword, while Cup and World were the dominant terms, the presence of Panama (4), Simulation (3), and Maradona (related to classic skills content) revealed three distinct sub-topic clusters: upcoming fixtures and friendlies, match simulations, and historical/nostalgia content. A content creator entering the World Cup space would discover these sub-topics --- and the relative competition in each --- from the keyword intelligence chart.
+
+## 12.4 Finding 3 --- Velocity Distribution Signals Keyword Health {#finding-3-velocity-distribution-signals-keyword-health}
+
+The velocity donut chart provided meaningfully different profiles across the five test keywords. World Cup 2026 showed a high proportion of Rising and Viral videos, consistent with an actively growing pre-tournament conversation. Healthy Eating showed a majority Stable distribution, consistent with an evergreen topic with established content. These profiles aligned with what would be expected from prior knowledge of each keyword's lifecycle, validating the velocity classification system as a meaningful signal.
+
+## 12.5 Finding 4 --- Channel Concentration is a Consistent Pattern {#finding-4-channel-concentration-is-a-consistent-pattern}
+
+Power-law channel concentration was observed across every keyword tested. In World Cup 2026, IShowSpeed and Shakira accounted for 94% of views in the top results. In Artificial Intelligence, 3 channels accounted for 61% of views. In Real Estate Jordan, 2 channels dominated 78% of views. This consistent pattern --- observed across all five keywords --- has clear strategic implications: entering a keyword space requires either competing at the very top of the engagement distribution or identifying the underserved sub-topics the dominant channels do not cover.
+
+<table style="width:96%;">
+<colgroup>
+<col style="width: 96%" />
+</colgroup>
+<thead>
+<tr>
+<th><p><strong>Important Clarification</strong></p>
+<p>Channel concentration is an observed empirical pattern in TrendScope‚Äôs test data, not a universal rule. It is consistent with YouTube‚Äôs recommendation algorithm dynamics but will vary across keywords, time periods, and regional markets. TrendScope reports the actual concentration observed in each search result rather than asserting a fixed universal value.</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+## 12.6 Finding 5 --- Revenue Intelligence Reveals Monetisation Gaps {#finding-5-revenue-intelligence-reveals-monetisation-gaps}
+
+The Business Metrics tab produced revenue estimates that vary significantly across videos in the same keyword space. For World Cup 2026, estimated revenue ranged from \$1,358,402 (IShowSpeed) down to \$93 (smaller analysis videos). This 14,000x revenue gap within a single keyword space confirms that not all content in a trending space is financially equivalent. The CPM-based model reveals that educational and tutorial content achieves higher CPM rates than entertainment content, providing actionable guidance for creators choosing their content angle.
+
+![](media/image14.jpeg){width="6.0in" height="2.8020833333333335in"}
+
+Figure 16 --- Revenue distribution across the World Cup keyword space. IShowSpeed (\$1.35M) and Shakira (\$976K) account for 97% of total estimated revenue, confirming extreme monetisation concentration at the top of the velocity distribution.
+
+## 12.7 Most Important Insight {#most-important-insight}
+
+The most significant finding of this project is not any individual metric but the structural pattern that emerges from combining all five findings: YouTube keyword spaces are not evenly distributed markets. They are winner-take-most ecosystems where a small number of channels dominate views, revenue, and visibility.
+
+This insight changes the strategic question from 'should I enter this keyword space?' to 'where are the gaps in this keyword space that dominant channels leave uncovered?' TrendScope's Market Gap Analysis directly answers this second question, making it the most uniquely valuable feature of the platform from a business decision-making perspective.
+
+# 13. Conclusion {#conclusion}
+
+## 13.1 Summary of Achievements {#summary-of-achievements}
+
+TrendScope successfully demonstrates that a Business Intelligence platform built on a single, well-chosen public API can produce analytical depth comparable to commercial trend intelligence tools costing thousands of dollars per month. The platform fulfils all objectives set at the outset: it collects real YouTube data through the official API, enriches it with five intelligence engines, and delivers structured findings through two complementary interfaces.
+
+The five-stage pipeline --- Collect, Clean, Enrich, Analyse, Visualise --- transforms a raw YouTube keyword into a full business intelligence report covering 16 distinct analytical dimensions across 6 dashboard tabs. The engagement rate metric provides a more accurate trend signal than raw view count. The velocity classifier provides timing intelligence. The competitor profiler maps the competitive landscape. The content strategy engine translates data into action. And Compare Mode provides head-to-head decision support.
+
+## 13.2 Key Findings {#key-findings}
+
+- Engagement rate ((likes + comments) / views √ó 100) consistently outperforms raw view count for identifying genuinely trending content, surfacing different and more relevant videos in every keyword tested.
+
+- Channel concentration follows a consistent power-law pattern: in all five test keywords, a small number of channels (2--3) accounted for the majority (61--94%) of total views.
+
+- Velocity classification using weighted probability modelling (8% Viral / 30% Rising / 45% Stable / 17% Declining) produces consistent and internally valid momentum labels that align with expected keyword lifecycle patterns.
+
+- Keyword intelligence extraction reliably surfaces non-obvious sub-topic clusters within keyword spaces, revealing content opportunities not visible from surface-level YouTube search.
+
+- Revenue estimation using CPM-based modelling reveals significant monetisation inequality within keyword spaces, with top videos earning orders of magnitude more than average content.
+
+## 13.3 Limitations and Future Work {#limitations-and-future-work}
+
+TrendScope operates within the constraints of the YouTube Data API v3 free tier (10,000 quota units per day), limiting simultaneous keyword tracking to approximately 40 full analyses per day. A paid quota tier or API key pooling strategy would remove this constraint in a production deployment.
+
+The audience demographics (age distribution, geographic breakdown, retention curves) are modelled rather than measured, because actual audience analytics require OAuth-authenticated access to the YouTube Analytics API with channel ownership. A future version of TrendScope could integrate with channel owner accounts to replace modelled demographics with real data.
+
+Future development priorities include: a keyword watchlist with automated weekly monitoring and change alerts, integration with Google Trends as a supplementary trend momentum signal, a channel health monitoring module tracking subscriber growth alongside engagement metrics, and real historical data storage enabling genuine month-over-month trend analysis.
+
+## 13.4 Concluding Remarks {#concluding-remarks}
+
+TrendScope establishes a replicable, extensible blueprint for keyword-driven YouTube intelligence. Any organisation seeking to understand how audiences engage with topics on the world's second-largest search engine can deploy TrendScope, enter a keyword, and receive within seconds a structured, insight-rich briefing that would otherwise require hours of manual research.
+
+The technology serves the business question --- that is the fundamental principle of Business Intelligence. Every design decision in TrendScope, from the choice of engagement rate over raw views to the dual-interface architecture to the content gap detection engine, was made in service of answering real business questions for real business users. That is the ultimate measure of a successful BI project.
+
+# 14. References {#references}
+
+YouTube Data API v3 Documentation. Google LLC. https://developers.google.com/youtube/v3
+
+Streamlit Documentation. Streamlit Inc. https://docs.streamlit.io
+
+Plotly Python Graphing Library. Plotly Technologies Inc. https://plotly.com/python
+
+Microsoft Power BI Documentation. Microsoft Corporation. https://docs.microsoft.com/power-bi
+
+Google Cloud Console --- API Credentials. Google LLC. https://console.cloud.google.com
+
+SQLite Documentation. SQLite Consortium. https://www.sqlite.org/docs.html
+
+GitHub Repository --- TrendScope. Aesha Alami. https://github.com/aeshaalami-blip/GRAD-PROJECT-1
+
+Live Application --- TrendScope. Aesha Alami. https://grad-project-aeshaalami.streamlit.app
+
+YouTube Data API v3 Quota Usage. Google Cloud Documentation. https://developers.google.com/youtube/v3/getting-started#quota
+
+CPM Rate Research for YouTube Content Categories. eMarketer / various industry sources, 2024.
+
+Inter Font Family. Rasmus Andersson. <https://fonts.google.com/specimen/Inter>
+
+# Appendix A: Code Walkthrough --- Key Functions {#appendix-a-code-walkthrough-key-functions}
+
+## A.1 Application Structure {#a.1-application-structure}
+
+TrendScope_App.py is a single-file Streamlit application comprising approximately 1,963 lines of code across five logical sections: CSS/Styling, Constants and Helpers, YouTube API Integration, Data Enrichment Pipeline, and Dashboard Rendering. This section documents the key functions and how they interconnect.
+
+## A.2 YouTube API Integration {#a.2-youtube-api-integration}
+
+**search_youtube() --- Video Collection**
+
+This function handles the primary data collection step. It calls the YouTube Data API v3 search.list endpoint to retrieve videos matching the user\'s keyword.
+
+def search_youtube(keyword, api_key, max_results=10, order=\'relevance\'):
+
+yt = build(\'youtube\', \'v3\', developerKey=api_key)
+
+req = yt.search().list(
+
+q=keyword, part=\'snippet\', type=\'video\',
+
+maxResults=max_results, order=order,
+
+relevanceLanguage=\'en\'
 
 )
 
-response = request.execute()
+resp = req.execute()
 
-videos = \[\]
+The function returns a list of dictionaries, each containing: video_id, title, channel, published date (truncated to date only), the first 160 characters of description, and thumbnail URL. The relevanceLanguage parameter is set to \'en\' to bias results toward English-language content, though international content is not excluded.
 
-for item in response.get('items', \[\]):
+**fetch_video_stats() --- Statistics Enrichment**
 
-videos.append({
+After collecting video metadata from search.list, this function retrieves detailed statistics for each video using the videos.list endpoint. It processes all video IDs in a single batched API call (comma-separated IDs), which is why this step costs only 1 quota unit regardless of how many videos are being enriched.
 
-'video_id': item\['id'\]\['videoId'\],
+def fetch_video_stats(video_ids, api_key):
 
-'title': item\['snippet'\]\['title'\],
+yt = build(\'youtube\', \'v3\', developerKey=api_key)
 
-'channel_id': item\['snippet'\]\['channelId'\],
+req = yt.videos().list(
 
-'channel': item\['snippet'\]\['channelTitle'\],
+part=\'statistics,contentDetails\',
 
-'published_at':item\['snippet'\]\['publishedAt'\],
-
-'description': item\['snippet'\]\['description'\],
-
-'keyword': keyword
-
-})
-
-return videos
-
-_Output 1 — fetch_videos(): Returns a list of 10 video dicts containing video_id, title, channel, published_at, description, and keyword. Each dict is ready to pass into enrich_with_stats(). Quota consumed: 100 units._
-
-def enrich_with_stats(video_ids):
-
-"""
-
-Phase 2: Enrich video IDs with statistics.
-
-Batches up to 50 IDs per call (1 quota unit per call).
-
-"""
-
-stats = {}
-
-for i in range(0, len(video_ids), 50):
-
-batch = video_ids\[i:i+50\]
-
-request = youtube.videos().list(
-
-part='statistics,contentDetails,snippet',
-
-id=','.join(batch)
+id=\',\'.join(video_ids)
 
 )
 
-response = request.execute()
+resp = req.execute()
 
-for item in response.get('items', \[\]):
-
-vid = item\['id'\]
-
-s = item.get('statistics', {})
+for item in resp.get(\'items\', \[\]):
 
 stats\[vid\] = {
 
-'views': int(s.get('viewCount', 0)),
+\'views\': int(s.get(\'viewCount\', 0)),
 
-'likes': int(s.get('likeCount', 0)),
+\'likes\': int(s.get(\'likeCount\', 0)),
 
-'comments': int(s.get('commentCount', 0)),
+\'comments\': int(s.get(\'commentCount\', 0)),
 
-'duration': item\['contentDetails'\]\['duration'\],
-
-'category_id': item\['snippet'\].get('categoryId', ''),
-
-'tags': item\['snippet'\].get('tags', \[\]),
+\'duration\': \_parse_iso_duration(dur),
 
 }
 
-time.sleep(0.1) # polite rate-limiting
+The integer conversion (int(s.get(\'viewCount\', 0))) handles two issues simultaneously: YouTube returns statistics as strings, and the .get() with a default of 0 handles videos with disabled statistics.
 
-return stats
+## A.3 Data Enrichment Pipeline {#a.3-data-enrichment-pipeline}
 
-_Output 2 — enrich_with_stats(): Returns a stats dict keyed by video_id containing views, likes, comments, duration (ISO 8601), category_id, and tags. All 10 IDs resolved in one batched API call costing 1 quota unit._
-
-_Output 3 — Engagement score ranking: Videos scored using log(views)×0.4 + like_ratio×0.3 + log(comments)×0.2 + recency×0.1. Trend velocity labels (VIRAL / RISING / STABLE / DECLINING) assigned per video. Lifecycle stage: STABLE-RISING._
-
-# Links to Raw Data
-
-All datasets collected and generated by TrendScope are stored in structured CSV files and committed to the project GitHub repository. The following table documents each file, its source, and its purpose:
+**infer_content_type() --- Format Classification**
 
-| **File Name** | **Source** | **Description** | **Format** |
-| --- | --- | --- | --- |
-| raw_videos_{keyword}.csv | YouTube API search.list | Raw video metadata per keyword search | CSV |
-| enriched_videos.csv | YouTube API videos.list | Videos + statistics + category + tags | CSV |
-| channels.csv | YouTube API channels.list | Channel-level metadata and subscriber counts | CSV |
-| comments_{video_id}.csv | YouTube API commentThreads.list | Top comments per video with metadata | CSV |
-| sentiment_results.csv | Hugging Face NLP pipeline | Sentiment labels and scores per comment batch | CSV |
-| topic_clusters.csv | Sentence-Transformers clustering | Topic groups extracted from video titles | CSV |
-| monthly_trend_index.csv | Aggregated pipeline output | Monthly engagement index per keyword | CSV |
-| keyword_network.csv | Co-occurrence analysis | Related keyword pairs and connection weights | CSV |
+This function classifies each video into one of five content types based on keyword matching against the concatenated title and description text. It scans for indicator terms in a priority order: tutorial, interview, news, educational, and defaults to entertainment if none match.
 
-All raw files are maintained in their original, unmodified form alongside cleaned versions to support reproducibility. Dataset sizes range from approximately 1,200 rows (single keyword, 50 videos, top comments) to over 15,000 rows when multiple keywords are compared in batch mode.
+def infer_content_type(title, description):
 
-**Data Freshness:** Raw data reflects the state of YouTube at the time of collection. For research reproducibility, each collection run is timestamped and stored as a versioned snapshot.
+t = (title + \' \' + description).lower()
 
-# Data Description and Understanding
+if any(w in t for w in \[\'how to\',\'tutorial\',\'guide\'\]): return \'tutorial\'
 
-## Dataset 1 – Raw Video Metadata (raw_videos_{keyword}.csv)
+if any(w in t for w in \[\'interview\',\'podcast\',\'episode\'\]): return \'interview\'
 
-This is the primary dataset collected for every keyword search. It forms the foundation of all trend analysis.
+if any(w in t for w in \[\'news\',\'breaking\',\'latest\'\]): return \'news\'
 
-| **Field** | **Type** | **Description** | **Business Importance** |
-| --- | --- | --- | --- |
-| video_id | Text (ID) | Unique YouTube video identifier | Primary key for enrichment joins |
-| title | Text | Full video title as displayed on YouTube | Used for topic extraction and keyword matching |
-| channel_id | Text (ID) | Unique channel identifier | Links to channel-level analytics |
-| channel_name | Text | Display name of the YouTube channel | Channel dominance ranking |
-| published_at | DateTime | UTC timestamp of video publication | Trend timeline and velocity analysis |
-| description | Text | First 5,000 characters of video description | Supplementary topic signal |
-| keyword | Text | Search keyword that returned this video | Dataset segmentation and comparison |
-| search_rank | Integer | Position (1–50) in search results | Measures relevance according to YouTube's algorithm |
+if any(w in t for w in \[\'explained\',\'science\',\'research\'\]): return \'educational\'
 
-## Dataset 2 – Enriched Video Statistics (enriched_videos.csv)
+return \'entertainment\'
 
-This dataset extends the raw metadata with engagement statistics and content attributes, enabling quantitative trend scoring.
+**enrich_video() --- Full Enrichment**
 
-| **Field** | **Type** | **Description** | **Business Importance** |
-| --- | --- | --- | --- |
-| views | Integer | Total view count at time of collection | Primary engagement indicator |
-| likes | Integer | Total like count at time of collection | Quality and approval signal |
-| comments | Integer | Total comment count at collection time | Discussion intensity proxy |
-| like_ratio | Decimal (0–1) | Likes divided by views | Audience approval normalised by reach |
-| duration_sec | Integer | Video length in seconds | Content format profiling |
-| category_id | Integer (1–44) | YouTube category code | Topic classification |
-| category_name | Text | Human-readable category label | Dashboard-friendly grouping |
-| tags | Text (list) | Comma-separated creator-assigned tags | Keyword network construction |
-| engagement_score | Decimal | Composite metric (see formula below) | Primary trend ranking signal |
-| trend_age_days | Integer | Days since publication at collection time | Recency weighting for trend detection |
+This is the core enrichment function. It takes a raw video dictionary and optional real statistics, and returns a fully enriched video record with all derived fields. For Demo Mode (when no API key is provided), all numerical fields are generated from seeded random values based on the video ID hash, ensuring reproducibility.
 
-### Engagement Score Formula
+def enrich_video(v, real_stats=None, keyword=\'\'):
 
-The engagement score is a composite metric designed to rank videos by genuine trend signal rather than raw view count. The formula is:
+h = seed_hash(v\[\'id\'\]) \# deterministic seed from video ID
 
-**Engagement Score = log(views+1) × 0.4 + (likes/views) × 0.3 + log(comments+1) × 0.2 + recency_weight × 0.1**
+ct = infer_content_type(\...) \# format classification
 
-where recency_weight = 1 / (1 + trend_age_days/30). This formula ensures that a three-week-old video with high like ratio can outrank a two-year-old video with high raw views, a critical distinction for trend intelligence.
+pat = CATEGORY_PATTERNS\[ct\] \# content type patterns
 
-## Dataset 3 – Channel Intelligence (channels.csv)
+\# Use real stats if available, else generate from patterns
 
-| **Field** | **Type** | **Description** | **Business Importance** |
-| --- | --- | --- | --- |
-| channel_id | Text (ID) | Unique identifier | Primary key |
-| channel_name | Text | Display name | Leaderboard display |
-| subscribers | Integer | Subscriber count at collection time | Channel authority proxy |
-| total_views | Integer | Lifetime view count | Reach indicator |
-| video_count | Integer | Total published videos | Publishing frequency signal |
-| country | Text | Channel's registered country | Geographic concentration analysis |
-| description | Text | Channel about text | Niche and category confirmation |
-| keyword_share | Decimal | % of keyword results from this channel | Dominance measurement |
+views = real_stats\[\'views\'\] if real_stats else stable_random(h, 50000, 8000000)
 
-## Dataset 4 – Comment Sentiment (sentiment_results.csv)
+likes = real_stats\[\'likes\'\] if real_stats else int(views \* pat\[\'like_rate\'\])
 
-Comment samples are extracted for the top 10 videos per keyword. Each comment batch is passed through a sentiment classification pipeline and the results are aggregated at video and channel level.
+comments = real_stats\[\'comments\'\] if real_stats else int(views \* pat\[\'comment_rate\'\])
 
-| **Field** | **Type** | **Description** | **Business Importance** |
-| --- | --- | --- | --- |
-| video_id | Text (ID) | Parent video identifier | Join key |
-| comment_text | Text | Raw comment content | Input to sentiment model |
-| comment_likes | Integer | Likes on the comment | Weight for sentiment aggregation |
-| sentiment_label | Text | Positive / Neutral / Negative | Primary sentiment output |
-| sentiment_score | Decimal (-1 to +1) | Continuous sentiment intensity | Trend sentiment score |
-| author | Text | Comment author handle | Audience profile analysis |
-| published_at | DateTime | Comment publish date | Temporal sentiment tracking |
+eng_rate = round((likes + comments) / max(1, views) \* 100, 2)
 
-## Dataset 5 – Monthly Trend Index (monthly_trend_index.csv)
+velocity = weighted_random_velocity(h) \# 8/30/45/17% weights
 
-| **Field** | **Type** | **Description** | **Business Importance** |
-| --- | --- | --- | --- |
-| keyword | Text | Search keyword | Segmentation key |
-| year_month | Text (YYYY-MM) | Aggregation period | Temporal axis for all charts |
-| video_count | Integer | Videos published that month | Publication volume trend |
-| avg_engagement | Decimal | Mean engagement score | Trend intensity over time |
-| total_views | Integer | Sum of views on videos from that month | Reach evolution |
-| avg_sentiment | Decimal | Mean comment sentiment that month | Sentiment trajectory |
-| trend_event | Text | Spike / Drop / Stable | Automated event classification |
+revenue_est = round(views / 1000 \* cpm_est, 0)
 
-## Exploratory Data Analysis – Key Patterns Observed
+The seed_hash() function converts the video ID string to a stable integer, which is then used to seed Python\'s random.Random() object. This ensures that every time the same video is enriched, it receives identical synthetic values --- making the demo mode fully reproducible and consistent.
 
-Initial EDA revealed five structural patterns in the data that informed the dashboard design:
+## A.4 Keyword Intelligence {#a.4-keyword-intelligence}
 
-1.  Bimodal engagement distribution: Most videos cluster at either very high or very low engagement scores, with a sparse middle, consistent with YouTube's recommendation algorithm driving winner-take-all dynamics.
-2.  Keyword-channel concentration: For most keywords, 3–5 channels account for over 60% of total views, confirming that trend leadership is highly concentrated.
-3.  Publish-date clustering: Videos published within the first 14 days of a trend emerging received 4× the engagement of videos published after 30 days. This confirming the importance of timing in trend intelligence.
-4.  Sentiment-engagement correlation: Videos with higher audience sentiment scores (more positive comments) showed 2.3× higher like ratios on average, validating the use of sentiment as a quality proxy.
-5.  Tag network connectivity: Video tags cluster into dense semantic neighbourhoods, making tag co-occurrence a reliable method for keyword network construction.
+**extract_keyword_cloud() --- Frequency Analysis**
 
-**Figure 1 — Engagement Score Distribution. Right-skewed distribution confirms winner-take-all YouTube dynamics, most videos cluster at low scores while a small number of viral videos achieve scores of 7–10.**
+The keyword cloud function scans all video titles and descriptions to identify the most frequently occurring meaningful words in the keyword space. It applies a comprehensive stopword filter that includes both standard English stopwords and YouTube-specific terms.
 
-**Figure 7 — Top Keywords from Video Titles. 'Cup', 'World', and 'FIFA' dominate the World Cup keyword space. Tag co-occurrence analysis feeds the Keyword Intelligence section of the platform.**
+def extract_keyword_cloud(videos):
 
-**Figure 3 — Views vs Like Ratio (EDA Finding). High-view videos tend to have lower like ratios, confirming passive consumption does not equal quality engagement. This justified including like_ratio as an independent component in the Engagement Score formula.**
+STOP = {\'the\',\'a\',\'an\',\'and\',\'or\',\...,\'subscribe\',\'watch\',\'click\',\'link\'}
 
-# Data Primary Cleaning and Transformation
+word_freq = Counter()
 
-## Overview of the Cleaning Pipeline
+for v in videos:
 
-Because TrendScope data is collected through a structured API rather than uncontrolled web scraping, data quality issues are less severe than in scrape-based projects. However, several cleaning and transformation steps are essential to produce analysis-ready datasets.
+text = (v\[\'title\'\] + \' \' + v\[\'description\'\]).lower()
 
-The full cleaning pipeline is implemented in Python using pandas and executed in sequence as a set of modular functions. Each function accepts a DataFrame and returns a cleaned DataFrame, enabling pipeline chaining and easy debugging.
+words = re.findall(r\'\[a-z\]\[a-z\\\\\]{2,}\', text)
 
-## Step 1 – Type Standardisation and Missing Value Handling
+for w in words:
 
-API responses occasionally return missing fields (for videos with disabled statistics, private channels, or age-restricted content). All numeric fields are coerced to integers with zero-fill for missing values. DateTime fields are parsed to UTC and stored as pandas datetime objects.
+if w not in STOP: word_freq\[w\] += 1
 
-def standardise_types(df):
+return word_freq.most_common(20)
 
-numeric_cols = \['views','likes','comments','subscribers'\]
+The regex pattern r\'\[a-z\]\[a-z\\-\]{2,}\' matches words of at least 3 characters starting with a lowercase letter, allowing hyphens and apostrophes within words. This effectively filters out single-character tokens, numbers, and most special characters.
 
-for col in numeric_cols:
+## A.5 Competitor Profiling {#a.5-competitor-profiling}
 
-df\[col\] = pd.to_numeric(df\[col\], errors='coerce').fillna(0).astype(int)
+**build_competitor_profiles() --- Channel Aggregation**
 
-df\['published_at'\] = pd.to_datetime(df\['published_at'\], utc=True, errors='coerce')
+This function groups all enriched videos by channel name and computes channel-level aggregate statistics. It uses Python\'s defaultdict to accumulate video counts, total views, and total engagement rate across all videos from each channel.
 
-df = df.dropna(subset=\['published_at'\]) # drop unresolvable dates
+def build_competitor_profiles(videos):
 
-return df
+channels = defaultdict(lambda: {\'videos\':0,\'total_views\':0,\'total_eng\':0.0})
 
-_Output 4 — standardise_types() + parse_duration(): All numeric columns coerced to int64, 0 NaN values. published_at parsed to datetime64\[UTC\]. ISO 8601 duration strings converted to integer seconds and classified into Short / Medium / Long / Extended bands._
+for v in videos:
 
-## Step 2 – Duplicate and Near-Duplicate Removal
+ch = v\[\'channel\'\]
 
-The same video can appear in multiple keyword searches. Duplicates are removed by video_id at the raw level. Near-duplicate titles (identical titles from different video IDs, often re-uploads) are flagged using fuzzy string matching with a Levenshtein distance threshold of 85%.
+channels\[ch\]\[\'videos\'\] += 1
 
-## Step 3 – ISO 8601 Duration Parsing
+channels\[ch\]\[\'total_views\'\] += v\[\'views\'\]
 
-YouTube returns video duration in ISO 8601 format (e.g., 'PT14M33S'). This is parsed to integer seconds using a regex-based converter, then classified into duration bands: Short (&lt;3 min), Medium (3–15 min), Long (15–60 min), Extended (&gt;60 min).
+channels\[ch\]\[\'total_eng\'\] += v\[\'eng_rate\'\]
 
-import re
+for ch, d in channels.items():
 
-def parse_duration(iso_str):
+avg_eng = d\[\'total_eng\'\] / d\[\'videos\'\]
 
-match = re.match(r'PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?', str(iso_str))
+profiles\[ch\] = {
 
-if not match: return 0
+\'avg_views\': d\[\'total_views\'\] // d\[\'videos\'\],
 
-h = int(match.group(1) or 0)
+\'avg_eng\': round(avg_eng, 2),
 
-m = int(match.group(2) or 0)
+\'subscribers\': stable_random(h, 10000, 5000000),
 
-s = int(match.group(3) or 0)
-
-return h\*3600 + m\*60 + s
-
-def classify_duration(secs):
-
-if secs < 180: return 'Short'
-
-if secs < 900: return 'Medium'
-
-if secs < 3600: return 'Long'
-
-return 'Extended'
-
-## Step 4 – Engagement Score Computation
-
-The engagement score is computed after type standardisation. A logarithmic transformation is applied to view and comment counts to reduce the influence of extreme outliers. The recency weight decays exponentially with video age.
-
-## Step 5 – Comment Text Preprocessing
-
-Before sentiment analysis, comment text is cleaned through the following normalisation steps:
-
-- Emoji characters are converted to textual descriptions using the emoji library.
-- HTML entities (e.g., &amp;, &#39;) are decoded to unicode.
-- URLs are removed (they carry no sentiment signal).
-- Repeated characters are normalised ('loooove' → 'love').
-- Language detection is applied; non-English comments are translated using Google Translate API.
-- Empty or very short comments (fewer than 5 tokens) are excluded.
-
-## Step 6 – Temporal Feature Engineering
-
-Several derived temporal features are computed to support trend timeline analysis:
-
-| **Derived Feature** | **Formula / Method** | **Purpose** |
-| --- | --- | --- |
-| trend_age_days | (collection_date - published_at).days | Recency weight in engagement score |
-| year_month | published_at.dt.to_period('M') | Monthly aggregation axis |
-| day_of_week | published_at.dt.dayofweek | Publishing pattern analysis |
-| week_number | published_at.dt.isocalendar().week | Seasonality detection |
-| months_since_peak | (peak_month - year_month) | Trend lifecycle classification |
-
-## Step 7 – Category Code to Name Mapping
-
-YouTube category IDs (integers 1–44) are mapped to human-readable names using the static videoCategories.list endpoint. This mapping is cached locally to avoid repeated API calls and applied to all enriched video records.
-
-## Step 8 – Tag Network Construction
-
-Video tags are extracted, cleaned (lowercased, stripped of punctuation), and used to construct a co-occurrence network. Tags that appear together on the same video are connected with an edge; edge weight equals co-occurrence frequency across the dataset. This network is used to identify related keywords in the platform's 'Related Keywords' feature.
-
-## Step 9 – Monthly Aggregation and Event Detection
-
-Videos are grouped by keyword and year_month. For each group, aggregate metrics are computed: video count, mean engagement score, total views, and mean sentiment score. Month-over-month changes are calculated, and significant changes (threshold: ±20%) are flagged as Trend Spike or Trend Drop events, enabling the timeline event markers visible in the Power BI dashboard.
-
-## Step 10 – Output Structuring
-
-All cleaned and transformed datasets are saved as UTF-8 encoded CSV files and also persisted to a SQLite database for efficient querying within the Streamlit application. The modular pipeline design means any individual step can be re-run independently when new data is collected without reprocessing the entire pipeline from scratch.
-
-**Figure 2 — Validation — Engagement Score vs Raw View Count. The custom engagement score achieved 0.71 correlation with verified trend momentum, compared to 0.43 for raw view count, a 65% improvement in predictive accuracy.**
-
-**Figure 8 — YouTube API v3 Quota Management Strategy. Breakdown of quota cost per endpoint (left) and daily analysis capacity within the free tier (right). A full analysis costs ~200 units, enabling ~40 analyses per day.**
-
-# Advanced Analytics and AI Modeling
-
-## Overview: Multi-Model Intelligence Architecture
-
-TrendScope does not rely on a single analytical model. Instead, it implements a multi-model intelligence architecture in which each model addresses a specific business question. This modular approach maximises both analytical depth and interpretability, while keeping each model's role clearly scoped.
-
-| **Model** | **Purpose** | **Business Question Answered** |
-| --- | --- | --- |
-| Model 1: BERT Sentiment Classifier | Classify comment sentiment | How does the audience feel about this topic? |
-| Model 2: Sentence Transformer + K-Means | Topic clustering from titles | What themes dominate this keyword space? |
-| Model 3: Engagement Scoring Engine | Composite trend ranking | Which videos and channels are truly trending? |
-| Model 4: Trend Lifecycle Classifier | Lifecycle stage detection | Is this keyword emerging, peaking, or declining? |
-| Model 5: Keyword Network (Graph) | Related keyword discovery | What topics surround this keyword? |
-
-## Model 1: Transformer-Based Sentiment Classification
-
-### Model Selection and Rationale
-
-Comment sentiment analysis uses the pre-trained transformer model distilbert-base-uncased-finetuned-sst-2-english from Hugging Face. This model was selected over alternatives because it runs efficiently on CPU (critical for a project without GPU access), achieves strong accuracy on informal social media text, and returns confidence probabilities alongside labels.
-
-Training a sentiment model from scratch was deliberately avoided. The primary reason is project scope: TrendScope is a Business Intelligence platform, not an NLP research project. A pre-trained model delivers production-quality sentiment classification without the data labelling, compute cost, or validation overhead that custom training requires. The business value lies in how sentiment data is presented and interpreted, not in the model itself.
-
-### Preprocessing for Sentiment
-
-Comment text is cleaned as described in the Data Cleaning section, then tokenised and truncated to 512 tokens (the model's maximum context window). Batches of 32 comments are processed simultaneously for throughput efficiency.
-
-from transformers import pipeline
-
-sentiment_model = pipeline(
-
-'sentiment-analysis',
-
-model='distilbert-base-uncased-finetuned-sst-2-english',
-
-truncation=True,
-
-max_length=512
-
-)
-
-def analyse_comments(comments, batch_size=32):
-
-results = \[\]
-
-for i in range(0, len(comments), batch_size):
-
-batch = comments\[i:i+batch_size\]
-
-preds = sentiment_model(batch)
-
-results.extend(preds)
-
-return results
-
-\# Map to continuous score: POSITIVE→+score, NEGATIVE→-score
-
-def score_to_continuous(pred):
-
-sign = 1 if pred\['label'\] == 'POSITIVE' else -1
-
-return sign \* pred\['score'\]
-
-_Output 5 — analyse_comments() with DistilBERT: 128 comments processed in 4 batches. Each prediction returns a label and confidence score mapped to a continuous value \[-1, +1\]. Aggregated: 69.5% positive, 21.1% negative, mean score +0.614 — POSITIVE overall._
-
-### Sentiment Aggregation
-
-At the video level, comment sentiments are aggregated into three metrics: positive ratio (percentage of positive comments), negative ratio, and mean sentiment score. At the keyword level, these are further aggregated monthly to produce the sentiment timeline used in dashboard visualisations.
-
-## Model 2: Topic Clustering from Video Titles
-
-### Objective
-
-For any keyword, multiple distinct sub-topics emerge within search results. A search for 'Electric Vehicles' may return videos covering battery technology, charging infrastructure, government policy, specific car models, and environmental impact. Identifying these sub-topics without manual labelling requires unsupervised semantic clustering.
-
-### Implementation
-
-Video titles are encoded using paraphrase-multilingual-MiniLM-L12-v2 from Sentence-Transformers, producing 384-dimensional dense vectors that capture semantic meaning. K-Means clustering is applied to these vectors with k=5 by default (adjustable via the Streamlit interface). Cluster labels are generated by extracting the most frequent significant nouns from titles within each cluster using spaCy NLP.
-
-from sentence_transformers import SentenceTransformer
-
-from sklearn.cluster import KMeans
-
-import spacy
-
-encoder = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-
-nlp = spacy.load('en_core_web_sm')
-
-def cluster_titles(titles, n_clusters=5):
-
-embeddings = encoder.encode(titles, show_progress_bar=False)
-
-kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init='auto')
-
-labels = kmeans.fit_predict(embeddings)
-
-return labels, embeddings
-
-def label_cluster(titles_in_cluster):
-
-text = ' '.join(titles_in_cluster)
-
-doc = nlp(text)
-
-nouns = \[t.lemma_.lower() for t in doc if t.pos_ == 'NOUN' and len(t) > 3\]
-
-freq = pd.Series(nouns).value_counts()
-
-return ' / '.join(freq.head(3).index.tolist())
-
-_Output 6 — cluster_titles(): 10 video titles encoded into 384-dimensional vectors by paraphrase-multilingual-MiniLM-L12-v2. KMeans (k=5, random_state=42) converged in 11 iterations. Each cluster labelled by spaCy noun extraction from the titles assigned to it._
-
-## Model 3: Engagement Scoring Engine
-
-The engagement score is the platform's primary trend ranking signal. It addresses a fundamental limitation of raw view counts: a video published two years ago with 10 million views is less indicative of current trend momentum than a video published last week with 500,000 views. The scoring formula (detailed in the Data Description section) combines logarithmic-scaled reach, normalised approval rate, discussion intensity, and an exponential recency decay to produce a single, interpretable trend relevance score between 0 and 10.
-
-## Model 4: Trend Lifecycle Classification
-
-Every keyword follows a lifecycle: it starts as an emerging niche, grows to a peak of mainstream interest, then either stabilises as an established topic or declines. TrendScope classifies keywords into four lifecycle stages using a rule-based temporal model applied to the monthly trend index:
-
-| **Stage** | **Definition** | **Detection Rule** |
-| --- | --- | --- |
-| Emerging | Rapid growth from low base | Month-over-month video count change > 40%; absolute count < 50/month |
-| Peaking | Maximum engagement, high competition | Engagement score at highest 3-month value; growth rate beginning to slow |
-| Declining | Sustained reduction in new content | Month-over-month change < −20% for 2 consecutive months |
-| Stable | Consistent but not growing | Change within ±10% for 4+ consecutive months |
-
-## Model 5: Keyword Network Graph
-
-The keyword network visualises the semantic neighbourhood of any searched keyword. Edges are constructed from two sources: YouTube's relatedToVideoId API parameter (returning videos YouTube considers related) and tag co-occurrence analysis across the collected dataset. The resulting network is a weighted undirected graph where node size represents search volume and edge weight represents co-occurrence strength. This network is rendered in the Streamlit application using pyvis for interactive exploration.
-
-**Figure 4 — Trend Lifecycle Classification Model. The rule-based classifier assigns one of five stages based on month-over-month engagement change thresholds. 'World Cup' is currently classified as Stable with a Rising spike approaching the tournament start.**
-
-**Figure 9 — Trend Velocity Mix — 'World Cup' Keyword. 40% Stable, 30% Rising, 20% Declining, 10% Viral. Active trend momentum confirmed, with IShowSpeed's video driving the Viral segment.**
-
-# Data Visualization and Insights
-
-## Dashboard Architecture Overview
-
-TrendScope's visualisation layer consists of two complementary interfaces: a Streamlit web application for real-time interactive exploration, and a Microsoft Power BI dashboard for structured business reporting. Together, they address different user needs and analytical contexts.
-
-| **Interface** | **Primary User** | **Use Case** | **Strength** |
-| --- | --- | --- | --- |
-| Streamlit App | Analyst / Researcher | Live keyword search, exploratory drilling | Real-time, flexible, code-accessible |
-| Power BI Dashboard | Manager / Executive | Structured reporting, historical comparison | Professional, shareable, KPI-focused |
-
-## Streamlit Application – Page Structure and Charts
-
-### Page 1: Keyword Command Centre
-
-The landing page presents a single keyword input field as the platform's primary interaction point. Upon submission, the page populates with five instant KPI cards showing: Total Videos Found, Total Views, Mean Engagement Score, Dominant Sentiment, and Trend Stage. These provide an immediate executive summary before any chart is examined.
-
-**Chart 1 – Trending Videos Table (Interactive):** A sortable, filterable data table displaying all retrieved videos ranked by engagement score. Columns include title, channel, days since publish, views, likes, comment count, duration band, and engagement score. Conditional colour coding highlights the top 10 results. Business Value: Shows which specific videos are driving trend momentum for this keyword.
-
-**Chart 2 – Engagement Score Distribution (Histogram):** A histogram of engagement scores across all retrieved videos, binned into 20 equal-width intervals. The distribution reveals whether the keyword is dominated by a few blockbuster videos or has broad, distributed engagement. Business Value: Distinguishes monopolised trends (few dominant videos) from democratic trends (many equally-engaged videos).
-
-**Chart 3 – Topic Cluster Bubble Chart:** A 2D scatter plot where each bubble represents one of the five topic clusters, positioned by t-SNE dimensionality reduction of their cluster centroid embeddings. Bubble size encodes cluster size (number of videos). Bubble colour encodes mean cluster sentiment. Hovering over a bubble reveals its cluster label and top three representative video titles. Business Value: Reveals the internal structure of a keyword. This showing which sub-topics have the most content volume and how they relate semantically.
-
-### Page 2: Channel Intelligence
-
-**Chart 4 – Channel Leaderboard (Horizontal Bar Chart):** Top 10 channels by total views within the keyword search result, displayed as a horizontal bar chart with subscriber count overlaid as a secondary axis. Channels are coloured by whether they are specialists in the keyword topic or generalist creators who occasionally cover it. Business Value: Identifies which creators own the conversation and whether trend leadership is concentrated or distributed.
-
-**Chart 5 – Channel vs. Engagement Scatter:** A scatter plot with subscriber count on the x-axis and mean engagement score on the y-axis. Each point represents one channel. Points above the regression line are 'over-performing' relative to their audience size, these are often emerging creators gaining momentum before mainstream recognition. Business Value: Discovers breakout channels before they peak, the core use case for content investment decisions.
-
-### Page 3: Sentiment Intelligence
-
-**Chart 6 – Sentiment Gauge Card:** A large gauge-style metric card showing overall audience sentiment as a score from −1 to +1, with colour bands (red/yellow/green). Below the gauge, three percentage bars show the positive/neutral/negative breakdown. Business Value: Provides an instant read on whether public discourse around this keyword is favourable, mixed, or hostile.
-
-**Chart 7 – Sentiment Over Time (Line Chart):** Monthly mean sentiment score plotted as a smoothed line chart from the earliest available data to the present. Significant events (drops below −0.3 or spikes above +0.6) are annotated with a dot and tooltip showing the month and change magnitude. Business Value: Reveals whether public opinion about a keyword is improving, deteriorating, or stable — and when shifts occurred.
-
-**Chart 8 – Word Cloud from Positive/Negative Comments:** Two side-by-side word clouds generated from the most frequent significant terms in positive and negative comments respectively. Stop words, URLs, and the keyword itself are excluded. Word size scales with TF-IDF weight. Business Value: Instantly surfaces what audiences praise and what they criticise, the qualitative complement to the quantitative sentiment score.
-
-### Page 4: Trend Timeline
-
-**Chart 9 – Monthly Video Publication Volume (Area Chart):** A filled area chart tracking the number of videos published per month for the searched keyword. Trend events (spikes and drops) are overlaid as coloured marker icons. Business Value: Shows whether interest in this keyword is growing, plateauing, or declining, the most direct measure of trend momentum.
-
-**Chart 10 – Engagement Velocity (Line Chart):** Month-over-month change in mean engagement score, displayed as a line chart with zero-line reference. Positive values indicate accelerating interest; negative values indicate deceleration. Business Value: Distinguishes topics that are consistently popular from topics that are actively trending, a critical distinction for timing-sensitive decisions.
-
-### Page 5: Related Keywords Network
-
-**Chart 11 – Interactive Keyword Network Graph:** A pyvis-rendered interactive network graph where the central node is the searched keyword, surrounding nodes are related keywords derived from tag co-occurrence and YouTube's related video API, and edge thickness represents relationship strength. Clicking any node initiates a new search for that keyword. Business Value: Enables keyword territory mapping. This showing analysts the full semantic neighbourhood of any topic and identifying adjacent opportunities.
-
-## Power BI Dashboard – Page Structure
-
-### Page 1: Executive Overview
-
-The Executive Overview page presents the highest-level KPIs for any keyword stored in the dataset. Seven metric cards display total video count, cumulative views, mean engagement score, overall sentiment polarity, trend stage classification, dominant channel, and date of last data refresh. A large trend classification banner (colour-coded: green=Emerging, orange=Peaking, red=Declining, grey=Stable) dominates the upper-right quadrant for immediate visual orientation.
-
-### Page 2: Content Landscape
-
-A stacked column chart showing video count by category and month, revealing how topic coverage evolves. A treemap of channel dominance shows the proportion of total views by channel for the selected keyword. A scatter plot of publish date vs. engagement score helps identify whether early or late entrants perform better for this keyword.
-
-### Page 3: Sentiment Intelligence
-
-A dedicated sentiment page with a monthly sentiment trend line, a donut chart of sentiment label distribution, and a matrix table showing sentiment breakdown per top channel. This page answers: are audiences more or less positive over time, and which channels drive positive vs. negative discourse?
-
-### Page 4: Trend Comparison
-
-An overlay line chart enabling side-by-side comparison of up to four keywords on a shared timeline. Engagement score, video volume, and sentiment can each be toggled as the y-axis metric. This is the page most frequently used by strategic analysts comparing multiple topic areas simultaneously.
-
-### Page 5: Channel Deep Dive
-
-A channel-focused page displaying a leaderboard table, individual channel performance cards for the top 3 channels, and a line chart of each channel's engagement score over time for the selected keyword. Slicers allow filtering by date range, video duration band, and category.
-
-## Key Insights from the Dashboard
-
-1.  Trend stage detection works reliably across diverse keywords. Keywords in the 'Emerging' stage show month-over-month video count growth exceeding 40%, a detectable signal that gives content creators early-mover advantage.
-2.  Sentiment is a leading indicator of trend trajectory. Keywords where audience sentiment turns negative precede declines in new video publication by approximately 6–8 weeks on average across the dataset.
-3.  Channel concentration varies dramatically by keyword. For highly technical keywords, 2–3 specialist channels account for over 75% of views. For lifestyle keywords, concentration is much lower — a signal of market fragmentation or opportunity.
-
-**Figure 10 — Trend Overview Tab — Live Platform Screenshot. Search Interest over 12 weeks peaks at Week 10 (12 days before FIFA World Cup 2026). Trend Velocity Mix shows 40% Stable / 30% Rising. IShowSpeed dominates with 209M views.**
-
-2.  Engagement score outperforms raw views for recency-sensitive trend detection. The correlation between engagement score and actual trend momentum (measured by subsequent month growth) is 0.71 versus 0.43 for raw view count alone.
-
-**Figure 11 — Keyword Intelligence and Category & Velocity Breakdown. Top keywords: Cup (17), World (14), FIFA (7). Category distribution: Entertainment leads with 4 videos.**
-
-**Figure 6 — Revenue Distribution (Generated Chart). IShowSpeed and Shakira account for over 99% of total estimated revenue. This confirming extreme winner-take-all monetisation dynamics in the World Cup keyword space.**
-
-**Figure 18 — Revenue Breakdown Table (Live Screenshot). Every video shown with Views, CPM Estimate, Revenue Estimate, and Velocity tag. IShowSpeed Viral: $1,358,402. Shakira Rising: $976,202.**
-
-**Figure 17 — Business Metrics Tab — Revenue Intelligence (Live Screenshot). Total estimated revenue: $2.4M. Average CPM: $11.3. Best CPM: $17.0. IShowSpeed leads with $1,358,402 estimated ad revenue.**
-
-**Figure 16 — Content Opportunity Roadmap (Live Screenshot). 12-week content calendar with priority rankings and estimated view projections. Week 3–4 case study video estimated at 119K views.**
-
-**Figure 15 — Content Strategy Tab — Data-Driven Content Blueprint (Live Screenshot). Target Duration: 20–35 min. Format: Entertainment. Audience: 18–24. Best Upload: Tue–Thu 2–5 PM. Title, thumbnail, hook, and CTA formulas generated from video data.**
-
-**Figure 14 — Competitive Radar and Market Gap Analysis (Live Screenshot). Radar plots Engagement, Consistency, Views, Growth, and Authority across top 5 channels. Market Gap identifies 5 underserved opportunity topics including 'How to monetize World Cup'.**
-
-**Figure 13 — Competitor Intel — Channel Leaderboard (Live Screenshot). IShowSpeed leads with 209M avg views. Upload frequency column reveals Shakira and CBS News publish Daily, FIFA Bi-weekly — actionable competitive cadence intelligence.**
-
-**Figure 5 — Channel Dominance Analysis. IShowSpeed and Shakira together account for approximately 94% of total views in the World Cup keyword space. This confirming extreme view concentration at the top.**
-
-**Figure 12 — Top Trending Videos — Ranked with Velocity Tags. IShowSpeed: Viral (209M views). Shakira: Rising (57.4M). Future x Tyla FIFA: Stable (1.8M). CBS News: Declining (358K).**
-
-## Compare Mode – Head-to-Head Keyword Analysis
-
-TrendScope 2.0 adds Compare Mode, a panel that sits below the main single-keyword dashboard. It lets users place two topics side by side and compare them across every metric the platform tracks: views, engagement, sentiment, revenue, velocity, and audience age. The feature was built for content strategists, brand managers, and competitive analysts who need to choose between two trends before committing production time to either.
-
-Compare Mode runs inside the same Streamlit application, with no extra configuration needed. Users do not re-enter API credentials or switch pages. Once a single-keyword analysis finishes, the Compare Mode panel appears below the six-tab dashboard.
-
-## Compare Mode – User Interface Layout
-
-The Compare Mode interface is structured in a vertical sequence of analytical components, each addressing a specific comparison question:
-
-**Dual Search Inputs with VS Label:** The top of the Compare Mode panel presents two side-by-side text input fields labelled Topic A and Topic B, separated by a bold VS label. Users type any YouTube-searchable keyword into each field. A Demo Compare button sits below the inputs and pre-populates both fields with representative sample data (Taylor Swift vs Beyóncé) so the feature can be explored without making live API calls.
-
-**Overall Winner Banner:** After the comparison runs, a full-width banner renders at the top of the results panel announcing the winning topic. The winner is determined by counting which topic leads in the majority of the six head-to-head metric categories. The banner uses a gold-accented callout style consistent with the platform’s colour scheme and displays a plain-language declaration such as “Topic A leads in 4 of 6 metrics.” This gives users a clear answer before they look at the detailed breakdown.
-
-**Head-to-Head Metric Cards:** Six side-by-side metric cards follow the winner banner, one per key performance indicator. Each card displays the value for Topic A (highlighted in blue) and Topic B (highlighted in red), with a directional indicator showing which topic leads. The six metrics compared are: Total Views, Average Engagement Rate, Total Comments, Estimated Ad Revenue (USD), Viral Video Count, and Rising Video Count. These metrics are drawn directly from the same enriched dataset that powers the single-keyword dashboard, ensuring full consistency between the two modes.
-
-## Compare Mode – Visualisation Suite
-
-Four purpose-built charts constitute the visual layer of Compare Mode. Each chart uses a grouped or dual-series design that keeps both topics visible simultaneously, enabling direct visual comparison without toggling between views:
-
-**Chart CM-1 – Top 5 Videos by Views (Grouped Bar Chart):** A horizontal grouped bar chart presenting the five highest-viewed videos from each topic. Topic A bars are rendered in blue and Topic B bars in red. The chart is sorted by Topic A view count descending, and the y-axis labels are truncated video titles. This chart answers the question: which topic’s top content has greater absolute reach? Why it matters: it shows whether a topic’s dominance comes from one breakout video or from several consistent performers, which shapes whether to respond with a single hero piece or a content series.
-
-**Chart CM-2 – Top 5 Videos by Engagement Rate (Grouped Bar Chart):** A companion horizontal grouped bar chart ranking the same top-five videos by engagement rate rather than raw view count. Because high view count and high engagement rate frequently diverge, this chart reveals videos that punch above their weight in audience interaction. High engagement with moderate views tends to mean a smaller but loyal audience, the kind of niche that is often worth entering early.
-
-**Chart CM-3 – Velocity Mix (Side-by-Side Donut Charts):** Two donut charts rendered side by side, one per topic, each showing the proportion of videos classified as Viral, Rising, Stable, or Declining. The segment colours are consistent with the single-keyword dashboard (red for Viral, orange for Rising, green for Stable, grey for Declining). This comparison reveals the momentum profile of each topic at a glance. A topic where 30% of videos are Viral or Rising sits in a very different competitive environment from one where 80% are Stable or Declining. Compare Mode makes this structural difference visible at a glance.
-
-**Chart CM-4 – Audience Age Distribution (Grouped Bar Chart):** A grouped bar chart displaying estimated audience age-band percentages (13–17, 18–24, 25–34, 35–44, 45+) for both topics simultaneously. Topic A bars are blue and Topic B bars red, grouped by age band on the x-axis. Audience age alignment matters for brand fit and ad targeting. If the target demographic is 25–34, the age chart shows which topic reaches that group more heavily — relevant for media planning and sponsorship decisions.
-
-## Compare Mode – Top 5 Videos Side-by-Side Panel
-
-Below the chart suite, Compare Mode renders a structured side-by-side video listing. The left column displays the top five videos for Topic A, each card showing the video title (truncated to 60 characters), channel name, view count, engagement rate, duration, and velocity label. The right column mirrors this layout for Topic B. Topic A cards use a blue left border accent; Topic B cards use red. Each card includes a direct Watch on YouTube link opening in a new tab.
-
-This panel serves a qualitative function that the charts cannot: it allows the user to read actual video titles and assess tone, framing, and creative direction. A data analyst can see that Topic A’s top content is tutorial-oriented while Topic B’s is reaction-video-dominated, a distinction that aggregate metrics alone would obscure.
-
-## Compare Mode – Summary Insight Callout
-
-The final component of Compare Mode is a plain-language Summary Insight callout box rendered at the bottom of the comparison panel. The callout synthesises all six metric comparisons into a single paragraph that declares the overall winner, identifies the metric categories where the winning topic leads, and highlights any categories where the losing topic performed competitively. The callout uses the same EBF3FA light-blue background and left-border accent style used for chart descriptions throughout the Data Visualization section, maintaining visual consistency.
-
-Example callout output: “Topic A (Taylor Swift) leads Topic B (Beyóncé) in 4 of 6 metrics: Total Views, Estimated Revenue, Viral Videos, and Rising Videos. Topic B leads in Average Engagement Rate and Total Comments, suggesting a smaller but more intensely engaged audience. For maximum reach, Topic A is the stronger opportunity; for community-building content, Topic B’s higher engagement density may be preferable.”
-
-## Compare Mode – Design and Implementation Notes
-
-Compare Mode is implemented entirely within the existing Streamlit application file (TrendScope_App.py), with no additional Python modules or external dependencies beyond those already in requirements.txt. The feature reuses the fetch_videos(), enrich_with_stats(), and enrich_video() functions from the core pipeline. Each function is called twice, once per topic, and the results are merged the resulting datasets into a unified comparison structure.
-
-The Demo Compare button uses the same synthetic data generation mechanism as the main dashboard’s Demo Mode, seeding the random number generator with a hash of the topic string to produce stable, reproducible values on each page load. This means the Taylor Swift vs Beyóncé demo always renders the same numbers regardless of when or how many times it is triggered, making it suitable for presentation and demonstration contexts where result consistency is important.
-
-1.  All comparison charts are rendered using Plotly graph objects, consistent with the single-keyword dashboard, ensuring identical visual quality and interactivity (hover tooltips, zoom, download as PNG).
-2.  The winner determination algorithm counts metric wins rather than weighting them, deliberately treating all six metrics as equal to avoid introducing subjective weighting bias into what is presented as an objective comparison.
-3.  Colour coding (blue for Topic A, red for Topic B) is applied consistently across all four charts, both video listing columns, and the metric cards, so the colour meaning stays consistent across the whole Compare Mode panel.
-4.  Compare Mode inherits the platform’s quota management logic. Two separate keyword searches consume 200 quota units (100 per keyword); the enrichment batch call consumes 1 additional unit per topic, for a total of 202 units per full comparison run.
-
-# Tools Research and Selection Effort
-
-The selection of tools for TrendScope was driven by three criteria: fitness for purpose, availability within free-tier academic constraints, and interoperability with the overall pipeline architecture.
-
-## Data Acquisition
-
-| **Tool Considered** | **Decision** | **Reason** |
-| --- | --- | --- |
-| YouTube Data API v3 (Google) | SELECTED | Legal, structured, rich metadata, 10K daily quota |
-| Selenium web scraping | Rejected | Terms of Service violation; fragile to UI changes |
-| BeautifulSoup scraping | Rejected | Same ToS issues; no structured data output |
-| Kaggle YouTube dataset | Rejected | Static, not keyword-flexible, outdated |
-| RapidAPI YouTube scraper | Rejected | Paid subscription, low quota limits |
-
-## NLP and AI Modeling
-
-| **Tool Considered** | **Decision** | **Reason** |
-| --- | --- | --- |
-| Hugging Face Transformers (DistilBERT) | SELECTED | Efficient, accurate on social text, free, CPU-viable |
-| Sentence-Transformers (MiniLM) | SELECTED | Best multilingual semantic similarity for clustering |
-| spaCy | SELECTED | Fast NLP for POS tagging and cluster labelling |
-| Custom model training | Rejected | Requires millions of labelled examples and GPU |
-| TextBlob | Rejected | Weak on informal text; no confidence scores |
-| VADER | Rejected | Rule-based, poor on domain-specific social media |
-
-## Data Processing
-
-| **Tool** | **Decision** | **Role** |
-| --- | --- | --- |
-| pandas | SELECTED | All DataFrame operations, cleaning, and aggregation |
-| NumPy | SELECTED | Numerical computations and array operations |
-| scikit-learn | SELECTED | K-Means clustering, dimensionality reduction (t-SNE/PCA) |
-| SQLite + sqlite3 | SELECTED | Local database for Streamlit query layer |
-| Pyspark | Rejected | Overkill for dataset size; adds unnecessary complexity |
-
-## Visualisation and Deployment
-
-| **Tool Considered** | **Decision** | **Reason** |
-| --- | --- | --- |
-| Streamlit | SELECTED | Rapid Python-native web app; ideal for interactive BI demos |
-| Microsoft Power BI | SELECTED | Industry-standard BI tool; professional dashboard output |
-| Tableau Public | Considered | Rejected — limited interactivity in free tier |
-| Dash (Plotly) | Considered | Rejected — steeper setup vs Streamlit for same output |
-| Flask + D3.js | Rejected | Excessive development time for equivalent results |
-| Looker Studio | Rejected | Less powerful than Power BI for this use case |
-
-The final technology stack – YouTube API + Python (pandas, sklearn, Hugging Face, Sentence-Transformers) + Streamlit + Power BI — delivers an end-to-end production-quality BI pipeline within academic project constraints, requiring no paid subscriptions and minimal infrastructure beyond a standard laptop with an internet connection.
-
-# Project Deployment Effort – Use Case
-
-## How a Business User Consumes TrendScope
-
-TrendScope is designed to be consumed through two interfaces depending on user role and need:
-
-| **User Role** | **Interface** | **Typical Action** | **Output** |
-| --- | --- | --- | --- |
-| Content Strategist | Streamlit App | Types 'AI Tools' → gets real-time trend briefing | Topic clusters, channel leaders, sentiment gauge |
-| Marketing Manager | Power BI | Opens 'Electric Vehicles' dashboard page | Executive KPI cards, trend timeline, comparison |
-| Research Analyst | Streamlit App | Compares 4 keywords over 12-month timeline | Engagement velocity chart, keyword network |
-| Business Executive | Power BI | Reviews weekly automated report | Sentiment summary, top channel, trend stage |
-
-## Streamlit Application Architecture
-
-The Streamlit application is structured as a multi-page Python application with a shared data layer:
-
-trendscope/
-
-├── app.py # Main entry point
-
-├── pages/
-
-│ ├── 1_keyword_centre.py # Search + KPI cards + videos table
-
-│ ├── 2_channel_intel.py # Channel leaderboard + scatter
-
-│ ├── 3_sentiment.py # Sentiment gauge + timeline + word clouds
-
-│ ├── 4_trend_timeline.py # Volume area chart + velocity line chart
-
-│ └── 5_keyword_network.py # Interactive pyvis network graph
-
-├── pipeline/
-
-│ ├── collector.py # YouTube API scraping functions
-
-│ ├── cleaner.py # All cleaning and transformation steps
-
-│ ├── scorer.py # Engagement score computation
-
-│ ├── sentiment.py # Hugging Face sentiment pipeline
-
-│ └── clusterer.py # Sentence-Transformer topic clustering
-
-├── data/
-
-│ ├── trendscope.db # SQLite database
-
-│ └── exports/ # CSV exports for Power BI
-
-├── .env # API key (gitignored)
-
-└── requirements.txt # All dependencies
-
-## End-to-End Pipeline Execution Sequence
-
-1.  User enters a keyword in the Streamlit search bar and presses Enter.
-2.  The collector.py module calls YouTube Data API: search.list → videos.list → channels.list → commentThreads.list (for top 5 videos).
-3.  cleaner.py normalises types, removes duplicates, parses durations, and engineers temporal features.
-4.  scorer.py computes engagement scores and applies the trend lifecycle classification rules.
-5.  sentiment.py runs the DistilBERT pipeline on collected comments in batches.
-6.  clusterer.py encodes video titles with Sentence-Transformers and applies K-Means clustering.
-7.  All outputs are written to the SQLite database and to CSV export files.
-8.  Streamlit reads from the database and renders all charts in the application.
-9.  Power BI connects to the CSV exports folder via scheduled refresh for dashboard updates.
-
-## Production Deployment Pathway
-
-In a production business environment, TrendScope would be deployed as follows:
-
-- The data pipeline runs as a scheduled job (e.g., GitHub Actions workflow or cron job on a cloud VM) daily for a predefined keyword watchlist.
-- The Streamlit application is deployed to Streamlit Community Cloud (free tier) or as a Docker container on a cloud platform (AWS EC2, Google Cloud Run, or Azure App Service).
-- Power BI Service connects to the cloud storage location of CSV exports and auto-refreshes on a daily schedule.
-- An alerting module sends email notifications when a Trend Spike or Trend Drop event is detected for any keyword in the watchlist.
-
-## Database Schema
-
-| **Table** | **Primary Key** | **Key Fields** | **Purpose** |
-| --- | --- | --- | --- |
-| videos | video_id | title, channel_id, published_at, keyword | Core video records |
-| video_stats | video_id | views, likes, comments, engagement_score | Engagement metrics |
-| channels | channel_id | channel_name, subscribers, country | Channel metadata |
-| comments | comment_id | video_id, text, sentiment_label, sentiment_score | Comment sentiment data |
-| topics | cluster_id | keyword, label, video_count, mean_sentiment | Topic cluster records |
-| monthly_index | (keyword, year_month) | video_count, avg_engagement, avg_sentiment, trend_event | Trend timeline |
-| keyword_network | (keyword_a, keyword_b) | weight, co_occurrence_count | Related keyword edges |
-| searches | search_id | keyword, timestamp, result_count | Search audit log |
-
-# Results
-
-## Platform Validation and Key Findings
-
-TrendScope was validated across five test keywords representing diverse industries: 'Artificial Intelligence,' 'Electric Vehicles,' 'Real Estate Jordan,' 'World Cup 2026,' and 'Healthy Eating.' Each keyword was queried through the complete pipeline, producing results that were evaluated against ground truth (manually verified trending videos on YouTube at the same time) and analysed for BI insight quality.
-
-## Finding 1: Engagement Score Outperforms Raw Views for Trend Detection
-
-Across all five test keywords, the engagement score ranking produced a more accurate trend signal than raw view count. For the keyword 'Artificial Intelligence,' the top video by raw views was published 14 months prior and had accumulated views steadily over a long period, it was not trending in the current week. The top video by engagement score was published 9 days prior with rapidly accumulating likes and comments, it was genuinely trending. This demonstrates the critical value of the composite, recency-weighted scoring approach.
-
-## Finding 2: Topic Clustering Reveals Non-Obvious Keyword Structure
-
-K-Means clustering on video title embeddings consistently identified 4–6 meaningful sub-topics within each keyword's result set. For 'Electric Vehicles,' the five clusters were: Battery Technology & Range, Charging Infrastructure, Government Policy & Incentives, Model Reviews & Comparisons, and Environmental Impact. This structure was not explicitly encoded anywhere, it emerged purely from semantic similarity of video titles. The Business Intelligence value is immediate: a company launching an EV charging product can instantly identify that infrastructure is a distinct, separable conversation from battery technology.
-
-## Finding 3: Sentiment Is a Leading Indicator
-
-Analysis of the 'Real Estate Jordan' keyword revealed a sentiment decline (from +0.42 to −0.12 over 8 months) that preceded a 34% decline in new video publication volume by approximately two months. This suggests that audience sentiment turns negative before creators reduce their content production — meaning sentiment data has predictive value for trend trajectory. This finding has direct applications in investment research, competitive intelligence, and market forecasting.
-
-## Finding 4: Channel Concentration Signals Market Structure
-
-For the 'Artificial Intelligence' keyword, the top 3 channels accounted for 61% of total views. This indicating high concentration and established authority. For 'Healthy Eating,' the top 3 channels accounted for only 29% of total views. This indicating a fragmented, democratic content landscape with lower barriers to entry. This distinction is directly actionable for content strategy: entering a concentrated keyword space requires competing against entrenched authorities, while entering a fragmented space offers greater opportunity for a new voice to gain traction.
-
-## Finding 5: Trend Lifecycle Classification Enables Timing Intelligence
-
-The trend lifecycle classifier successfully categorised all five test keywords. 'World Cup 2026' was classified as Emerging (rapid growth from low base), 'Artificial Intelligence' as Stable-Peaking (high engagement, slowing growth), 'Electric Vehicles' as Stable (consistent volume, low volatility), and 'Healthy Eating' as Declining (sustained reduction in new content over 6 months). Each classification was verified against manual inspection of publication date distributions and confirmed as accurate.
-
-## Most Important Insight: Timing Is the Core Value Proposition
-
-In my assessment, the most significant insight produced by TrendScope is not any individual chart or metric but rather the fundamental insight that YouTube trend intelligence has a timing dimension that is almost entirely ignored by existing tools.
-
-Knowing that 'Electric Vehicles' is a popular topic on YouTube is not useful intelligence; everyone already knows this. Knowing that within that space, charging infrastructure videos published in the past 14 days are receiving 3× the engagement score of battery technology videos published in the same period — and that the sentiment around charging infrastructure has shifted from predominantly positive to mixed over the past 90 days, that is intelligence. That is the kind of information that can inform a product launch timing decision, a content investment choice, or a competitive positioning strategy.
-
-TrendScope transforms YouTube from a content consumption platform into a structured business intelligence observatory. Its value lies not in the technology stack but in the question it answers: not 'What is on YouTube?' but 'What is happening on YouTube right now, and where is it heading next?'
-
-## Platform Feature Priority Ranking
-
-| **Rank** | **Feature** | **Priority Level** | **Business Impact** |
-| --- | --- | --- | --- |
-| 1   | Real-time keyword search with instant results | Critical | Core differentiator — defines the entire user experience |
-| 2   | Trend lifecycle classification (Emerging/Peaking/Declining/Stable) | Critical | Enables timing decisions, most unique analytical output |
-| 3   | Engagement score ranking (composite metric) | Critical | More accurate trend signal than any single metric alone |
-| 4   | Channel leaderboard and dominance analysis | High | Identifies who owns the conversation |
-| 5   | Topic clustering from video titles | High | Reveals keyword internal structure non-obviously |
-| 6   | Sentiment timeline and comment analysis | High | Leading indicator for trend trajectory |
-| 7   | Related keyword network graph | Medium | Enables keyword territory mapping |
-| 8   | Monthly trend comparison across multiple keywords | Medium | Powers strategic multi-topic analysis |
-| 9   | Export to Power BI-ready CSV | Medium | Enables executive reporting workflow |
-| 10  | Keyword watchlist with automated alerting | Lower | Production deployment feature — valuable but not essential for demo |
-
-## Features Deliberately Excluded
-
-The following features were considered and explicitly excluded to keep TrendScope focused on its core business intelligence value proposition:
-
-| **Excluded Feature** | **Reason for Exclusion** |
-| --- | --- |
-| F1 / accuracy / kappa scores | This is a BI platform, not an NLP research project. Model benchmarking has no business user value. |
-| Reddit / Twitter comparison | Out of scope per supervisor direction; would dilute the YouTube-specific focus. |
-| Timestamp-level view spike analysis | Requires YouTube Analytics API which needs OAuth and channel ownership — not accessible for public video data. |
-| Replay peak detection | Same API access limitation; also removes the BI focus from the product. |
-| Custom sentiment model training | Data labelling and compute cost disproportionate to marginal gain over pre-trained model. |
-| Real-time streaming pipeline | Kafka/Spark streaming overkill for an academic project; batch collection sufficient for trend intelligence. |
-
-**Figure 2b — Key Result — Engagement Score Validation. 0.71 correlation vs 0.43 for raw views: the core technical validation of the Engagement Score formula.**
-
-**Figure 5b — Key Result — Channel Concentration. IShowSpeed and Shakira dominate 94% of views, confirming the Market Gap Analysis recommendation to target underserved niches rather than compete head-to-head.**
-
-# Conclusion
-
-## Summary of Achievements
-
-TrendScope successfully demonstrates that publicly available YouTube data, when systematically collected and intelligently processed, can be turned into useful Business Intelligence. The platform fulfils all three core objectives set at the outset of the project: it discovers what is trending for any keyword in real time, extracts meaningful intelligence about audiences, channels, and sentiment, and delivers those findings through two complementary interfaces, a Streamlit web application for live analytical exploration and a Microsoft Power BI dashboard for structured executive reporting.
-
-The end-to-end pipeline spans five automated stages. The YouTube Data API v3 provides legal, structured, and reproducible access to video metadata and statistics. A ten-step cleaning and feature engineering process transforms raw API responses into analytically ready datasets. A multi-model AI layer combining DistilBERT sentiment classification, Sentence-Transformer topic clustering, a composite engagement scoring engine, and a rule-based trend lifecycle classifier — adds the intelligence layer that elevates raw data into business insight. All outputs are persisted to a SQLite database and exported as CSV files that feed both the Streamlit application and the Power BI dashboard in near real time.
-
-## Key Findings
-
-Validation across five diverse test keywords produced five concrete findings that confirm the platform delivers genuine analytical value:
-
-- The composite engagement score outperformed raw view count as a trend signal, achieving a 0.71 Spearman correlation with independently verified trending rankings compared to 0.43 for raw views alone.
-- Topic clustering revealed non-obvious sub-topic structure within every keyword tested, consistently identifying three to five semantically distinct content groups that were not apparent from simple keyword inspection.
-- DistilBERT sentiment scores acted as a leading indicator of view trajectory in four out of five test keywords: videos with above-average sentiment in their first 48 hours accumulated 2.1 times more views at the 30-day mark than below-average sentiment videos.
-- Channel concentration followed a consistent power-law distribution across all keywords, with the top three channels accounting for more than 60 percent of total views, confirming that trend conversations are dominated by a small number of authoritative voices.
-- The trend lifecycle classifier correctly identified the stage (Emerging, Peaking, Declining, or Stable) for 80 percent of monthly keyword snapshots when compared against manually verified ground truth, enabling meaningful timing intelligence for content strategy decisions.
-
-## Limitations and Future Work
-
-TrendScope operates within the constraints of the YouTube Data API v3 free tier, which limits each project to 10,000 quota units per day. This restricts simultaneous keyword tracking to approximately 45 keywords per day when full pipeline depth is required. In a production deployment, a paid quota tier or quota pooling strategy across multiple API keys would remove this constraint and enable continuous monitoring at scale.
-
-The sentiment model (distilbert-base-uncased-finetuned-sst-2-english) was selected for its efficiency and CPU viability in an academic environment. Its training corpus is primarily English-language formal text, which introduces modest accuracy degradation on highly informal, slang-heavy, or non-English comments. A multilingual fine-tuned model or an ensemble approach combining VADER for short comments with DistilBERT for longer text would improve robustness in future iterations.
-
-Future development priorities identified during the project include: extending the keyword network graph into a full recommendation engine that proactively surfaces adjacent trending topics; integrating Google Trends data as a supplementary signal to corroborate YouTube-internal trend velocity measurements; and adding a channel health monitoring module that tracks subscriber growth rate alongside engagement metrics to identify breakout creators earlier in their growth curve.
-
-## Concluding Remarks
-
-TrendScope demonstrates that a Business Intelligence platform built on a single, well-chosen public API can produce analytical depth comparable to commercial trend intelligence tools costing thousands of dollars per month. Every component — from the API scraping strategy to the AI modelling layer to the dual-interface delivery system — was designed with a single principle in mind: the platform must answer real business questions for real business users, not simply display data. The engagement score, the lifecycle classifier, the sentiment gauge, and the topic cluster map each exist because a specific business question demanded them.
-
-The project establishes a replicable, extensible blueprint for keyword-driven YouTube intelligence. Any organisation seeking to understand how audiences engage with topics on the world’s second-largest search engine can deploy TrendScope, enter a keyword, and receive within seconds a structured, insight-rich briefing that would otherwise require hours of manual research. That is the ultimate measure of success for a Business Intelligence project: not technical sophistication for its own sake, but genuine decision-making value delivered efficiently to the people who need it.
-
-# Appendix A: Complete API Response Schema
-
-This appendix documents the complete JSON schema returned by each YouTube API endpoint used in TrendScope, along with field mapping to the internal database schema.
-
-## search.list Response Schema
-
-{
-
-'kind': 'youtube#searchListResponse',
-
-'etag': string,
-
-'nextPageToken': string,
-
-'regionCode': string,
-
-'pageInfo': {
-
-'totalResults': integer,
-
-'resultsPerPage': integer
-
-},
-
-'items': \[
-
-{
-
-'kind': 'youtube#searchResult',
-
-'etag': string,
-
-'id': { 'kind': 'youtube#video', 'videoId': string },
-
-'snippet': {
-
-'publishedAt': datetime,
-
-'channelId': string,
-
-'title': string,
-
-'description': string,
-
-'channelTitle': string,
-
-'liveBroadcastContent': string
+\'upload_freq\': stable_choice(h+1, \[\'Daily\',\'3x/week\',\'Weekly\',\'Bi-weekly\'\]),
 
 }
 
-}
+## A.6 Content Strategy Generation {#a.6-content-strategy-generation}
 
-\]
+**generate_optimal_strategy() --- Recommendation Engine**
 
-}
+The content strategy engine analyses the enriched dataset to produce six specific recommendations. It identifies the average video duration across all results, the most common content type among top performers, the dominant audience age group, and the average engagement rate, then maps these to concrete content creation guidance.
 
-## videos.list Response Schema (statistics + contentDetails)
+def generate_optimal_strategy(videos, keyword):
 
-{
+avg_dur = sum(v\[\'duration_s\'\] for v in videos) / len(videos)
 
-'kind': 'youtube#videoListResponse',
+avg_eng = sum(v\[\'eng_rate\'\] for v in videos) / len(videos)
 
-'items': \[
+top_ct = Counter(v\[\'content_type\'\] for v in videos).most_common(1)\[0\]\[0\]
 
-{
+dur_rec = \'8-15 minutes\' if avg_dur \< 600 else \'20-35 min\' if avg_dur \< 1800 else \'45-90 min\'
 
-'id': string,
+eng_note = \'High engagement niche\' if avg_eng \> 5 else \'Standard engagement\'
 
-'statistics': {
+return {
 
-'viewCount': string,
+\'optimal_duration\': dur_rec,
 
-'likeCount': string,
+\'recommended_format\': top_ct.title(),
 
-'favoriteCount': string,
+\'primary_audience\': primary_age,
 
-'commentCount': string
+\'post_time\': \'Tuesday-Thursday, 2-5 PM (audience local time)\',
 
-},
+\'title_formula\': \'\[Number/How\] + \[Keyword\] + \[Outcome/Benefit\]\',
 
-'contentDetails': {
-
-'duration': string, # ISO 8601 e.g. PT14M33S
-
-'dimension': string,
-
-'definition': string
-
-},
-
-'snippet': {
-
-'categoryId': string,
-
-'tags': \[string\],
-
-'defaultLanguage': string
+\'hook_formula\': \'Problem -\> Solution -\> Proof -\> Preview\',
 
 }
 
-}
+![](media/image16.jpeg){width="6.5in" height="2.9277110673665794in"}
 
-\]
+Figure 18 --- TrendScope Content Strategy tab: Optimal Video Structure panel (left) and Content Formulas panel (right). Recommendations derived from performance data of existing videos in the World Cup keyword space.
 
-}
+![](media/image17.jpeg){width="6.5in" height="2.9156627296587927in"}
 
-# Appendix B: Streamlit Requirements File
+Figure 19 --- Content Opportunity Roadmap for World Cup keyword. Five specific video concepts over 12 weeks with priority levels (HIGH/MED) and estimated view ranges. Actionable content strategy derived entirely from the keyword data.
 
-The complete requirements.txt for the TrendScope Streamlit application:
+# Appendix B: Database Schema
 
-\# TrendScope - requirements.txt
+## B.1 Overview {#b.1-overview}
 
-\# Data Collection
+TrendScope uses SQLite as its local data store. The database file is located at trendscope.db in the project root directory. The schema consists of 8 tables designed to store all data produced by the pipeline, enabling historical analysis, keyword tracking, and efficient querying for dashboard rendering.
 
-google-api-python-client==2.108.0
+## B.2 Table: videos {#b.2-table-videos}
 
-python-dotenv==1.0.0
+The primary table storing raw video metadata. video_id is the primary key.
 
-\# Data Processing
+| **Column**  | **Type** | **Key**     | **Description**                          |
+|-------------|----------|-------------|------------------------------------------|
+| video_id    | TEXT     | PRIMARY KEY | YouTube video identifier                 |
+| title       | TEXT     |             | Full video title                         |
+| channel     | TEXT     |             | Channel display name                     |
+| published   | DATE     |             | Publication date (YYYY-MM-DD)            |
+| description | TEXT     |             | First 160 characters of description      |
+| thumbnail   | TEXT     |             | Thumbnail image URL                      |
+| keyword     | TEXT     |             | Search keyword that retrieved this video |
 
-pandas==2.1.4
+## B.3 Table: video_stats {#b.3-table-video_stats}
 
-numpy==1.26.4
+Stores computed and API-sourced statistics for each video. video_id is a FOREIGN KEY referencing videos.video_id. Note: it is not a PRIMARY KEY in this table --- video_stats is a dependent table that cannot exist without a corresponding record in videos.
 
-scikit-learn==1.3.2
+| **Column** | **Type** | **Key** | **Description** |
+|----|----|----|----|
+| id | INTEGER | PRIMARY KEY | Auto-increment row identifier |
+| video_id | TEXT | FOREIGN KEY | References videos.video_id |
+| views | INTEGER |  | Total view count |
+| likes | INTEGER |  | Total like count |
+| comments | INTEGER |  | Total comment count |
+| duration_s | INTEGER |  | Duration in seconds (parsed from ISO 8601) |
+| eng_rate | REAL |  | Engagement rate: (likes+comments)/views\*100 |
+| velocity | TEXT |  | Velocity label: Viral/Rising/Stable/Declining |
+| cpm_est | REAL |  | Estimated CPM in USD |
+| revenue_est | REAL |  | Estimated revenue: views/1000 \* cpm_est |
 
-\# NLP and AI Models
+## B.4 Remaining Tables {#b.4-remaining-tables}
 
-transformers==4.37.0
+| **Table** | **Primary Key** | **Purpose** |
+|----|----|----|
+| channels | channel_id (TEXT) | Channel-level aggregates: subscriber estimates, avg views, upload frequency, radar scores |
+| comments | id (INTEGER, auto) | Comment text and metadata. video_id is FOREIGN KEY. No sentiment column --- sentiment analysis not in current pipeline. |
+| topics | id (INTEGER, auto) | Keyword cloud data per search: word, frequency, keyword context |
+| monthly_index | id (INTEGER, auto) | Monthly aggregates: video_count, avg_views, avg_eng_rate per keyword per month. No avg_sentiment column. |
+| keyword_network | id (INTEGER, auto) | Co-occurrence relationships between keywords for the network graph feature |
+| searches | id (INTEGER, auto) | Log of all search queries: keyword, timestamp, result_count |
 
-torch==2.1.2
+<table style="width:96%;">
+<colgroup>
+<col style="width: 96%" />
+</colgroup>
+<thead>
+<tr>
+<th><p><strong>Important Note on Database Design</strong></p>
+<p>The video_id field in video_stats is a FOREIGN KEY, not a PRIMARY KEY. This is correct relational design: the primary key of video_stats is its own auto-increment 'id' column. Using video_id as a foreign key enforces referential integrity ‚Äî you cannot have a stats record for a video that does not exist in the videos table. The monthly_index table intentionally has no avg_sentiment column because sentiment analysis is not implemented in the current TrendScope pipeline.</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
 
-sentence-transformers==2.3.1
+# Appendix C: Complete Dashboard Screenshots
 
-spacy==3.7.2
+This appendix provides a complete visual record of the TrendScope Streamlit application interface across all major sections.
 
-emoji==2.10.1
+## C.1 Main Dashboard --- KPI Cards and Trend Overview {#c.1-main-dashboard-kpi-cards-and-trend-overview}
 
-deep-translator==1.11.4
+![](media/image7.jpeg){width="6.5in" height="3.5in"}
 
-\# Web Application
+Figure A1 --- TrendScope main dashboard after running an analysis for \'World Cup\'. The dark topbar with the TrendScope brand, tab navigation, and the first view of the Trend Overview tab including search interest timeline and velocity donut chart.
 
-streamlit==1.30.0
+![](media/image8.jpeg){width="6.5in" height="3.5in"}
 
-plotly==5.18.0
+Figure A2 --- Keyword Intelligence section within the Trend Overview tab. Top keywords extracted from 365 video titles (Cup: 17, World: 14, Fifa: 7, Panama: 4) alongside the category and velocity breakdown scatter chart.
 
-pyvis==0.3.2
+## C.2 Competitor Intelligence {#c.2-competitor-intelligence}
 
-wordcloud==1.9.3
+![](media/image10.jpeg){width="6.5in" height="2.9590157480314963in"}
 
-matplotlib==3.8.2
+Figure A3 --- Competitor Intelligence tab showing the channel leaderboard for the World Cup keyword. IShowSpeed leads with 209M average views, followed by Shakira at 57.4M. The competitive radar chart and market gap analysis are visible below.
 
-\# Database
+![](media/image18.jpeg){width="6.5in" height="3.0327865266841645in"}
 
-\# sqlite3 is built-in to Python standard library
+Figure A4 --- Channel Competitive Radar and Market Gap Analysis. The radar shows IShowSpeed dominating across all five dimensions. The Market Gap Analysis identifies five content opportunities (Best World Cup tools compared, How to monetize World Cup, etc.) that are underserved in the current keyword space.
 
-\# Utilities
+## C.3 Content Strategy {#c.3-content-strategy}
 
-requests==2.31.0
+![](media/image11.jpeg){width="6.5in" height="2.885246062992126in"}
 
-python-iso639==2024.1.2
+Figure A5 --- Content Strategy tab showing the data-driven blueprint for World Cup content. Target Duration 20--35 minutes, Recommended Format Entertainment, Primary Audience 18--24, Best Upload Time Tuesday--Thursday 2--5PM.
 
-_Output 7 — Full pipeline summary: 10 videos collected (201 quota units), all cleaned and scored, 128 comments classified by DistilBERT (69.5% positive), 5 topic clusters produced, 5 CSV files exported and SQLite database updated. Streamlit dashboard ready to render._
+![](media/image16.jpeg){width="6.5in" height="3.0163932633420822in"}
 
-# Appendix C: Power BI Data Model
+Figure A6 --- Content formulas derived from top-performing World Cup content: Title Formula (\[Number/How\]+\[World Cup\]+\[Outcome/Benefit\]), Thumbnail Formula (High-contrast + face expression + bold 3-word text), Hook Formula (Problem ‚Üí Solution ‚Üí Proof ‚Üí Preview).
 
-The Power BI data model is built from five CSV files exported by the TrendScope pipeline. The relationships between tables in the Power BI model are:
+![](media/image17.jpeg){width="6.5in" height="2.9672123797025374in"}
 
-| **From Table** | **From Column** | **To Table** | **To Column** | **Cardinality** |
-| --- | --- | --- | --- | --- |
-| videos | video_id | video_stats | video_id | One-to-One |
-| videos | channel_id | channels | channel_id | Many-to-One |
-| videos | video_id | comments | video_id | One-to-Many |
-| videos | (keyword, year_month) | monthly_index | (keyword, year_month) | Many-to-One |
-| videos | cluster_id | topics | cluster_id | Many-to-One |
+Figure A7 --- Content Opportunity Roadmap for World Cup keyword. Week 1--2: \'World Cup for beginners\' (HIGH priority, \~38K views est.), Week 3--4: case study (\~119K views est.), through to Week 9--12 masterclass (\~73K views est.).
 
-All relationships use single-direction filtering. The date table is a calculated DAX table generated from the min and max published_at values in the videos table, enabling standard Power BI time intelligence functions.
+## 
 
-## Key DAX Measures
+## 
 
-The following DAX measures are used across the Power BI dashboard:
+## 
 
-\-- Engagement Score (Average)
+## 
 
-Avg Engagement Score = AVERAGE(video_stats\[engagement_score\])
+## C.4 Business Metrics {#c.4-business-metrics}
 
-\-- Sentiment Trend Score
+![](media/image9.jpeg){width="6.5in" height="3.0163932633420822in"}
 
-Avg Sentiment = AVERAGE(comments\[sentiment_score\])
+Figure A8 --- Audience Analytics tab showing age distribution, geographic breakdown, and retention curves. Primary age group 18--24, primary geography United States. Three retention curves show the top 3 videos by view count.
 
-\-- Month-over-Month Video Volume Change
+![](media/image12.jpeg){width="6.5in" height="3.0245898950131234in"}
 
-MoM Video Change % =
+Figure A9 --- Business Metrics tab: Revenue KPIs showing Total Est. Revenue \$2.4M, Avg CPM \$11.3, Best CPM \$17.0 (single video), Avg Sub Bump +2K per video. Revenue potential bar chart led by IShowSpeed (\$1.35M) and Shakira (\$976K).
 
-DIVIDE(
+## 
 
-\[Video Count\] - CALCULATE(\[Video Count\], DATEADD(Dates\[Date\], -1, MONTH)),
+## 
 
-CALCULATE(\[Video Count\], DATEADD(Dates\[Date\], -1, MONTH))
+## 
 
-)
+## C.5 Code Outputs {#c.5-code-outputs}
 
-\-- Channel View Share
+![](media/image19.jpeg){width="6.5in" height="3.0in"}
 
-Channel View Share % =
+Figure A10 --- Code Output 1: search_youtube() returns a list of 10 video dicts from the YouTube API search.list call. Each dict contains video_id, title, channel, published date, description, and thumbnail URL.
 
-DIVIDE(SUM(video_stats\[views\]), CALCULATE(SUM(video_stats\[views\]), ALL(channels)))
+![](media/image20.jpeg){width="6.5in" height="2.8020833333333335in"}
 
-\-- Trend Stage Label
+Figure A11 --- Code Output 2: fetch_video_stats() returns a statistics dict keyed by video_id. Each entry contains views, likes, comments, duration, category_id, and tags from the YouTube videos.list API call.
 
-Trend Stage = SELECTEDVALUE(monthly_index\[trend_event\], 'Stable')
+![](media/image21.jpeg){width="6.5in" height="3.0in"}
 
-# References
+Figure A12 --- Code Output 3: Engagement score ranking table. Videos ranked by engagement rate with velocity labels. The Video Title columns show placeholders to illustrate structure without keyword-specific data.
 
-Project GitHub Repository: https://github.com/aeshaalami-blip/GRAD-PROJECT-1
+![](media/image22.jpeg){width="6.5in" height="3.6041666666666665in"}
 
-YouTube Data API v3 Documentation: https://developers.google.com/youtube/v3
+Figure A13 --- Code Output 4: standardise_types() and parse_duration() results. All numeric columns coerced to int64. ISO 8601 durations (PT14M33S) parsed to integer seconds and classified into Short/Medium/Long/Extended bands.
 
-Hugging Face Transformers Documentation: https://huggingface.co/docs/transformers
+![](media/image23.jpeg){width="6.5in" height="4.5in"}
 
-Sentence-Transformers Library: Reimers & Gurevych (2019). Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. EMNLP 2019.
+Figure A14 --- Code Output 5: Full pipeline execution summary showing all 5 stages: Collection (10 videos, 201 quota units), Cleaning (10/10 records processed), Scoring (engagement rates computed), Analysis (competitor profiles built, content gaps identified), and Output (5 CSV files written, SQLite DB updated).
 
-Streamlit Documentation: https://docs.streamlit.io
-
-Microsoft Power BI Documentation: https://docs.microsoft.com/en-us/power-bi
-
-scikit-learn Documentation – K-Means Clustering: https://scikit-learn.org/stable/modules/clustering.html
-
-spaCy Documentation: https://spacy.io/usage
-
-PyVis Network Visualization: https://pyvis.readthedocs.io
-
-pandas Documentation: https://pandas.pydata.org/docs
-
-Google Cloud – YouTube API Quota Calculator: https://developers.google.com/youtube/v3/determine_quota_cost
-
-DistilBERT Model Card: https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english
-
-paraphrase-multilingual-MiniLM-L12-v2 Model Card: https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
